@@ -1,0 +1,41 @@
+---
+title: "Frequently Asked Questions about NeoXZ"
+sidebarTitle: "FAQ"
+description: "Answers to the most common questions about NeoXZ: account management, API usage, billing, and integration support."
+---
+
+Quick answers to the most common questions our users ask. If you don't find what you're looking for here, reach out to our support team at [support@neoxz.com](mailto:support@neoxz.com).
+
+<AccordionGroup>
+  <Accordion title="How do I create an API key?">
+    Navigate to **Settings → API Keys** in your NeoXZ dashboard and click **Create New Key**. Give your key a descriptive name so you can identify its purpose later, then click **Generate**. Copy the key immediately — it is only shown once and cannot be retrieved after you leave the page.
+  </Accordion>
+
+  <Accordion title="Can I have multiple API keys?">
+    Yes, you can create as many API keys as your plan allows. It is a good practice to use a separate key for each application or environment (for example, one for development and one for production). This makes it easy to revoke access for a specific integration without affecting others.
+  </Accordion>
+
+  <Accordion title="What happens if my API key is compromised?">
+    Revoke the compromised key immediately by going to **Settings → API Keys**, locating the key, and clicking **Revoke**. Generate a replacement key and update all services that were using the old key. Review your recent API activity logs in the dashboard to check for any unauthorized usage during the exposure window.
+  </Accordion>
+
+  <Accordion title="Is there a free plan available?">
+    Yes, NeoXZ offers a free tier that includes a limited number of API requests per month, access to core endpoints, and community support. You can upgrade to a paid plan at any time from **Settings → Billing** to unlock higher rate limits, team seats, webhook support, and priority support. No credit card is required to sign up for the free tier.
+  </Accordion>
+
+  <Accordion title="How do I add team members to my workspace?">
+    Go to **Settings → Team** and click **Invite Member**. Enter the team member's email address and select the role you want to assign them — either **Admin**, **Developer**, or **Viewer**. They will receive an invitation email and can join your workspace by following the link. The number of seats available depends on your current plan.
+  </Accordion>
+
+  <Accordion title="What API rate limits apply to my plan?">
+    Rate limits vary by plan. The free tier allows up to 100 requests per minute, the Pro plan allows up to 1,000 requests per minute, and the Enterprise plan supports custom limits. You can monitor your current usage in the dashboard under **Analytics → API Usage**. If you consistently hit your limit, consider upgrading your plan or implementing request batching in your integration.
+  </Accordion>
+
+  <Accordion title="How do I receive webhook events?">
+    Go to **Settings → Webhooks** and click **Add Endpoint**. Enter the publicly accessible HTTPS URL where NeoXZ should deliver events, then select the event types you want to subscribe to. NeoXZ will send a `POST` request to your endpoint each time a matching event occurs. Make sure your endpoint returns a `2xx` status code to acknowledge receipt — failed deliveries are retried automatically.
+  </Accordion>
+
+  <Accordion title="How do I delete my account?">
+    Navigate to **Settings → Account** and scroll to the **Danger Zone** section, then click **Delete Account**. You will be asked to confirm by typing your account name. Note that account deletion is permanent and immediately removes all your data, API keys, and workspace members — this action cannot be undone. If you are on a paid plan, cancel your subscription first to avoid further charges.
+  </Accordion>
+</AccordionGroup>

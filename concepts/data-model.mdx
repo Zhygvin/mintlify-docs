@@ -1,0 +1,128 @@
+---
+title: "NeoXZ Data Model: Resources, Users, and Events"
+sidebarTitle: "Data Model"
+description: "Learn the core data entities in NeoXZ — resources, users, and events — and how they relate to each other across your workspace."
+---
+
+NeoXZ organizes your data around three core entities: **resources**, **users**, and **events**. Resources are the objects you create and manage through the API. Users are the identities that own and operate within your workspace. Events are the immutable records NeoXZ emits whenever something meaningful happens — they power webhooks, audit logs, and automation. Understanding these entities and how they connect to each other is the foundation for building any integration on NeoXZ.
+
+## Resources
+
+A resource is the primary unit of data in NeoXZ. Every object you create through the API — whether a configuration, a record, or a project — is represented as a resource with a consistent set of fields. Resources are scoped to your workspace and environment.
+
+<ResponseField name="id" type="string" required>
+  The unique identifier for the resource. NeoXZ generates this automatically at creation time using a `res_` prefix (e.g., `res_01hxyz123abc`). Use this ID to reference the resource in subsequent API calls.
+</ResponseField>
+
+<ResponseField name="name" type="string" required>
+  A human-readable label for the resource. Names must be unique within a workspace and can be up to 255 characters long.
+</ResponseField>
+
+<ResponseField name="type" type="string" required>
+  The category of the resource. The `type` field determines which operations are available and what fields appear in `metadata`. Possible values include `project`, `config`, and `record`.
+</ResponseField>
+
+<ResponseField name="created_at" type="string" required>
+  An ISO 8601 timestamp indicating when the resource was created (e.g., `2024-06-01T12:00:00Z`). This field is set by NeoXZ and is read-only.
+</ResponseField>
+
+<ResponseField name="metadata" type="object">
+  An arbitrary key-value store you can use to attach custom data to a resource. Keys must be strings; values can be strings, numbers, or booleans. NeoXZ does not interpret or index metadata fields.
+
+  <Expandable title="metadata constraints">
+    - Maximum of **50 keys** per resource
+    - Key length: up to **40 characters**
+    - Value length: up to **500 characters** per value
+    - Total metadata size must not exceed **8 KB**
+  </Expandable>
+</ResponseField>
+
+**Example resource object:**
+
+```json
+{
+  "id": "res_01hxyz123abc",
+  "name": "primary-config",
+  "type": "config",
+  "created_at": "2024-06-01T12:00:00Z",
+  "metadata": {
+    "environment": "staging",
+    "owner_team": "platform",
+    "version": "3"
+  }
+}
+```
+
+## Users
+
+A user represents an authenticated identity within your NeoXZ workspace. Users can be human operators managing resources through the dashboard, or service accounts created for machine-to-machine integrations. Each user is assigned a role that governs their permissions.
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | string | Unique identifier for the user, prefixed with `usr_` |
+| `email` | string | The email address associated with the user's account |
+| `role` | string | The user's permission level: `owner`, `admin`, `member`, or `viewer` |
+| `created_at` | string | ISO 8601 timestamp of when the user was added to the workspace |
+
+**Example user object:**
+
+```json
+{
+  "id": "usr_09kabc456def",
+  "email": "alex@example.com",
+  "role": "admin",
+  "created_at": "2024-03-15T09:30:00Z"
+}
+```
+
+<Note>
+  Service accounts follow the same user schema. Assign them the minimum role required for their integration — typically `member` for read/write access or `viewer` for read-only access.
+</Note>
+
+## Events
+
+An event is an immutable record that NeoXZ creates whenever a significant action occurs in your workspace — such as a resource being created, updated, or deleted. Events are the backbone of the webhook system: NeoXZ serializes each event into a signed HTTP POST and delivers it to your registered endpoint.
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | string | Unique identifier for the event, prefixed with `evt_` |
+| `type` | string | A dot-notation string describing what happened (e.g., `resource.created`) |
+| `payload` | object | The full snapshot of the affected entity at the time the event occurred |
+| `timestamp` | string | ISO 8601 timestamp of when the event was emitted |
+
+**Example event object:**
+
+```json
+{
+  "id": "evt_77pqrs789ghi",
+  "type": "resource.created",
+  "payload": {
+    "id": "res_01hxyz123abc",
+    "name": "primary-config",
+    "type": "config",
+    "created_at": "2024-06-01T12:00:00Z",
+    "metadata": {
+      "environment": "staging"
+    }
+  },
+  "timestamp": "2024-06-01T12:00:01Z"
+}
+```
+
+<Warning>
+  Events are retained for **30 days**. If your webhook endpoint is unavailable and misses deliveries, you can replay events via the API within that window. After 30 days, events are permanently deleted.
+</Warning>
+
+## Relationships
+
+Resources, users, and events are tightly interconnected across your workspace:
+
+- **Users create and own resources.** Every resource tracks which user initiated its creation. You can filter resources by owner to audit activity or enforce team-level access patterns.
+- **Resources emit events.** Whenever a resource changes state — created, updated, or deleted — NeoXZ automatically generates a corresponding event. The event's `payload` contains a full snapshot of the resource at the moment the change occurred.
+- **Events reference both users and resources.** An event record includes the ID of the resource that changed and the ID of the user (or service account) whose action triggered the change. This gives you a complete, auditable chain from actor to action to outcome.
+
+```
+User ──creates/updates/deletes──► Resource ──triggers──► Event ──delivers──► Webhook
+```
+
+Use this relationship model to build traceable, event-driven workflows: a user action modifies a resource, NeoXZ emits an event, and your system reacts automatically via a webhook handler.

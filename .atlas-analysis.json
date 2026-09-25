@@ -1,13 +1,11 @@
 {
-  "$schema": "https://mintlify.com/docs.json",
+  "projectType": "saas",
+  "projectName": "NeoXZ",
+  "projectDescription": "A full-stack web platform built on Next.js, designed to help users get started quickly and integrate seamlessly.",
   "theme": "luma",
-  "name": "NeoXZ",
-  "colors": {
-    "primary": "#ef7025",
-    "light": "#eec9bc",
-    "dark": "#4fa1ab"
-  },
-  "favicon": "/favicon.svg",
+  "primaryColor": "#ef7025",
+  "lightColor": "#eec9bc",
+  "darkColor": "#4fa1ab",
   "navigation": {
     "tabs": [
       {
@@ -69,20 +67,18 @@
       }
     ]
   },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:support@neoxz.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Get Started",
-      "href": "/quickstart"
-    }
-  },
-  "footer": {
-    "socials": {}
-  }
+  "keyFeatures": [
+    "Next.js-powered full-stack web platform",
+    "Custom HTTP server with environment-based configuration",
+    "Production-ready server setup with error handling",
+    "Configurable port via environment variables",
+    "REST API with authentication and webhook support"
+  ],
+  "publicApiSurface": [
+    "GET /api/* — resource endpoints",
+    "POST /api/users — user management",
+    "POST /api/webhooks — webhook event delivery",
+    "PORT environment variable for server configuration",
+    "NODE_ENV environment variable for dev/production mode"
+  ]
 }

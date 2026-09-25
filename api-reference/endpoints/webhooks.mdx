@@ -1,0 +1,251 @@
+---
+title: "REST API Endpoints for Webhooks"
+sidebarTitle: "Webhooks"
+description: "Register and manage webhook endpoints with the NeoXZ API. List, create, and delete webhook subscriptions to receive real-time event notifications."
+---
+
+Webhooks let NeoXZ notify your application when events occur. Instead of polling the API for changes, you register an HTTPS endpoint and NeoXZ sends a `POST` request to it whenever a matching event is triggered. Use these endpoints to manage your webhook subscriptions programmatically.
+
+---
+
+## Webhook events
+
+Subscribe to any combination of the following events when registering a webhook:
+
+| Event | Description |
+|---|---|
+| `resource.created` | Fired when a new resource is created in the workspace. |
+| `resource.updated` | Fired when an existing resource's name or metadata is changed. |
+| `resource.deleted` | Fired when a resource is permanently deleted. |
+| `user.invited` | Fired when a new user is invited to the workspace. |
+| `user.removed` | Fired when a user is removed from the workspace. |
+
+---
+
+## List webhook endpoints
+
+Retrieve all webhook subscriptions registered in your workspace.
+
+```
+GET https://api.neoxz.com/v1/webhooks
+```
+
+<CodeGroup>
+
+```bash Request
+curl https://api.neoxz.com/v1/webhooks \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```json Response
+{
+  "data": [
+    {
+      "id": "wh_01hx9c3d2e",
+      "url": "https://your-app.com/webhooks/neoxz",
+      "events": ["resource.created", "resource.deleted"],
+      "active": true,
+      "created_at": "2024-01-12T10:00:00Z"
+    },
+    {
+      "id": "wh_01hx9c4f5g",
+      "url": "https://your-app.com/webhooks/users",
+      "events": ["user.invited", "user.removed"],
+      "active": true,
+      "created_at": "2024-01-13T11:45:00Z"
+    }
+  ]
+}
+```
+
+</CodeGroup>
+
+<ResponseField name="data" type="array">
+  Array of webhook subscription objects.
+
+  <Expandable title="Webhook object fields">
+    <ResponseField name="id" type="string">
+      Unique identifier for the webhook subscription.
+    </ResponseField>
+    <ResponseField name="url" type="string">
+      The destination URL NeoXZ sends event payloads to.
+    </ResponseField>
+    <ResponseField name="events" type="array">
+      List of event types this webhook subscribes to.
+    </ResponseField>
+    <ResponseField name="active" type="boolean">
+      Whether NeoXZ is actively delivering events to this endpoint.
+    </ResponseField>
+    <ResponseField name="created_at" type="string">
+      ISO 8601 timestamp recording when the webhook was registered.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+---
+
+## Register a webhook endpoint
+
+Create a new webhook subscription. NeoXZ will begin sending event payloads to your URL immediately after registration.
+
+```
+POST https://api.neoxz.com/v1/webhooks
+```
+
+<ParamField body="url" type="string" required>
+  The publicly accessible HTTPS URL that NeoXZ should deliver event payloads to. Must begin with `https://`.
+</ParamField>
+
+<ParamField body="events" type="array" required>
+  An array of event type strings to subscribe to. Must contain at least one event. See [Webhook events](#webhook-events) for the full list of available values.
+</ParamField>
+
+<ParamField body="secret" type="string">
+  An optional string used to generate an HMAC-SHA256 signature for each delivery. If omitted, NeoXZ generates a secret automatically. See [Verifying signatures](#verifying-signatures) for how to use it.
+</ParamField>
+
+<Tip>
+  Copy and securely store the `secret` from the response immediately — NeoXZ will never display it again. If you lose it, delete the webhook and create a new one.
+</Tip>
+
+<CodeGroup>
+
+```bash Request
+curl -X POST https://api.neoxz.com/v1/webhooks \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://your-app.com/webhooks/neoxz",
+    "events": ["resource.created", "resource.updated", "resource.deleted"]
+  }'
+```
+
+```json Response
+{
+  "id": "wh_01hx9c3d2e",
+  "url": "https://your-app.com/webhooks/neoxz",
+  "events": ["resource.created", "resource.updated", "resource.deleted"],
+  "active": true,
+  "secret": "whsec_4f8a2b1c9d3e7f06a5b8c2d4e6f0a1b3",
+  "created_at": "2024-01-15T10:30:00Z"
+}
+```
+
+</CodeGroup>
+
+---
+
+## Delete a webhook
+
+Remove a webhook subscription. NeoXZ will immediately stop delivering events to the registered URL.
+
+```
+DELETE https://api.neoxz.com/v1/webhooks/:id
+```
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the webhook subscription to delete.
+</ParamField>
+
+<CodeGroup>
+
+```bash Request
+curl -X DELETE https://api.neoxz.com/v1/webhooks/wh_01hx9c3d2e \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```json Response
+HTTP/1.1 204 No Content
+```
+
+</CodeGroup>
+
+A successful deletion returns a `204 No Content` response with an empty body.
+
+---
+
+## Webhook payload format
+
+Every event NeoXZ delivers shares the same top-level envelope structure. The `data` field contains the full object relevant to the event type.
+
+```json
+{
+  "id": "evt_abc123",
+  "type": "resource.created",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "data": {
+    "id": "res_xyz",
+    "name": "My Resource",
+    "type": "widget"
+  }
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | string | Unique identifier for this event delivery. Use it to deduplicate retried deliveries. |
+| `type` | string | The event type, e.g. `resource.created`. |
+| `timestamp` | string | ISO 8601 timestamp of when the event occurred. |
+| `data` | object | The full object associated with the event. |
+
+NeoXZ retries failed deliveries up to **five times** with exponential backoff. Your endpoint must return a `2xx` status code within **10 seconds** to be considered a successful delivery.
+
+---
+
+## Verifying signatures
+
+NeoXZ attaches an `X-NeoXZ-Signature` header to every webhook delivery. The value is an HMAC-SHA256 digest of the raw request body, signed with your webhook secret. Always verify this signature before processing the payload.
+
+```javascript
+const crypto = require("crypto");
+
+function verifyWebhookSignature(req, secret) {
+  const signature = req.headers["x-neoxz-signature"];
+
+  if (!signature) {
+    throw new Error("Missing X-NeoXZ-Signature header");
+  }
+
+  // Compute the expected HMAC-SHA256 digest using the raw request body
+  const expectedSignature = crypto
+    .createHmac("sha256", secret)
+    .update(req.body) // must be the raw Buffer, not a parsed object
+    .digest("hex");
+
+  // Use timingSafeEqual to prevent timing attacks
+  const sigBuffer = Buffer.from(signature, "hex");
+  const expectedBuffer = Buffer.from(expectedSignature, "hex");
+
+  if (sigBuffer.length !== expectedBuffer.length) {
+    throw new Error("Signature length mismatch");
+  }
+
+  if (!crypto.timingSafeEqual(sigBuffer, expectedBuffer)) {
+    throw new Error("Invalid webhook signature");
+  }
+
+  return true;
+}
+
+// Express.js example — use express.raw() to preserve the raw body
+app.post(
+  "/webhooks/neoxz",
+  express.raw({ type: "application/json" }),
+  (req, res) => {
+    try {
+      verifyWebhookSignature(req, process.env.NEOXZ_WEBHOOK_SECRET);
+    } catch (err) {
+      return res.status(401).send("Unauthorized");
+    }
+
+    const event = JSON.parse(req.body);
+    console.log("Received event:", event.type);
+
+    res.status(200).send("OK");
+  }
+);
+```
+
+<Note>
+  Always use the **raw** request body bytes when computing the signature — do not use a JSON-parsed or re-serialized version, as any whitespace or key-ordering differences will cause the check to fail.
+</Note>

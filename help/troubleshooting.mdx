@@ -1,0 +1,173 @@
+---
+title: "Troubleshoot Common NeoXZ Issues"
+sidebarTitle: "Troubleshooting"
+description: "Diagnose and fix the most common issues you may encounter with the NeoXZ API, authentication, webhooks, and integrations."
+---
+
+This guide helps you diagnose and fix the most common issues when working with NeoXZ. Work through the relevant section below, and if you're still stuck, contact [support@neoxz.com](mailto:support@neoxz.com) with your request ID and a description of the problem.
+
+<Tip>
+  Enable debug logging in your integration to capture full request and response details. Most HTTP client libraries support a verbose or debug mode — logging raw headers and bodies makes it significantly faster to identify the root cause of an issue before contacting support.
+</Tip>
+
+---
+
+## Authentication Errors
+
+Authentication errors occur when the API cannot verify your identity. Check the error code in the response body to determine the exact cause.
+
+### 401 Unauthorized
+
+A `401` response means the API key is missing, malformed, or has been revoked. Verify that you are sending the key in the `Authorization` header using the `Bearer` scheme and that the key value matches what is shown in **Settings → API Keys**. If the key was recently regenerated, make sure all your services have been updated to use the new value.
+
+### 403 Forbidden
+
+A `403` response means your API key was recognised but does not have permission to perform the requested action. Check the scopes assigned to your key under **Settings → API Keys → Edit** and add any missing permissions. If you are on the free tier, some endpoints may require a paid plan — review the [API reference](/api-reference) for per-endpoint plan requirements.
+
+Both errors return a JSON body in the following format:
+
+```json
+{
+  "error": "unauthorized",
+  "message": "Invalid or missing API key"
+}
+```
+
+---
+
+## API Request Issues
+
+### 400 Bad Request
+
+A `400` error means your request body is missing required fields or contains invalid values. Read the `message` field in the error response — it identifies which field failed validation. Cross-reference it with the [API reference](/api-reference) to confirm the correct field names, types, and constraints.
+
+### 404 Not Found
+
+A `404` error means the resource ID in your request path does not exist, or you do not have access to it. Double-check the ID you are using and confirm the resource was created in the same workspace your API key belongs to. Deleted resources also return `404`.
+
+### 429 Too Many Requests
+
+A `429` error means you have exceeded your plan's rate limit. The response includes a `Retry-After` header indicating how many seconds to wait before sending another request.
+
+<Warning>
+  Retrying immediately after a `429` will continue to fail and may extend your back-off window. Implement exponential back-off in your integration: wait 1 second before the first retry, then 2, 4, 8 seconds, and so on, up to a maximum of 60 seconds. Consider adding jitter (a small random offset) to prevent thundering-herd problems when multiple clients retry simultaneously.
+</Warning>
+
+---
+
+## Webhook Issues
+
+### Endpoint Not Receiving Events
+
+If your webhook endpoint is not receiving events, work through the following checks:
+
+<Steps>
+  <Step title="Confirm the URL is publicly accessible">
+    NeoXZ must be able to reach your endpoint over the public internet via HTTPS. Local addresses such as `localhost` or `127.0.0.1` will not work. Use a tool like [ngrok](https://ngrok.com) during local development to expose a local server with a public URL.
+  </Step>
+  <Step title="Check the selected event types">
+    Go to **Settings → Webhooks**, click your endpoint, and verify that the event types you expect are toggled on. Events that are not selected are silently dropped.
+  </Step>
+  <Step title="Review delivery logs">
+    Open the **Deliveries** tab for your webhook endpoint. Each delivery attempt is logged with the request payload, response status, and response body. Failed attempts are retried automatically up to five times with exponential back-off.
+  </Step>
+  <Step title="Return a 2xx status code">
+    Your endpoint must respond with a status code in the `2xx` range within 10 seconds. Any other response — including a redirect — is treated as a failure and triggers a retry.
+  </Step>
+</Steps>
+
+### Signature Verification Failures
+
+NeoXZ signs every webhook payload with a secret specific to your endpoint. If signature verification fails, check that you are reading the raw request body before parsing it as JSON — parsing and re-serialising the body changes the byte sequence and invalidates the signature.
+
+Use the following Node.js snippet as a reference implementation:
+
+```javascript
+const crypto = require("crypto");
+
+function verifyWebhookSignature(rawBody, signatureHeader, secret) {
+  // The header format is: t=<timestamp>,v1=<signature>
+  const parts = signatureHeader.split(",");
+  const timestamp = parts.find((p) => p.startsWith("t="))?.split("=")[1];
+  const receivedSig = parts.find((p) => p.startsWith("v1="))?.split("=")[1];
+
+  if (!timestamp || !receivedSig) {
+    throw new Error("Malformed signature header");
+  }
+
+  // Reject payloads older than 5 minutes to prevent replay attacks
+  const tolerance = 5 * 60 * 1000;
+  if (Date.now() - Number(timestamp) * 1000 > tolerance) {
+    throw new Error("Webhook timestamp too old");
+  }
+
+  const signedPayload = `${timestamp}.${rawBody}`;
+  const expectedSig = crypto
+    .createHmac("sha256", secret)
+    .update(signedPayload, "utf8")
+    .digest("hex");
+
+  const isValid = crypto.timingSafeEqual(
+    Buffer.from(receivedSig, "hex"),
+    Buffer.from(expectedSig, "hex")
+  );
+
+  if (!isValid) {
+    throw new Error("Signature mismatch");
+  }
+
+  return true;
+}
+```
+
+You can find your endpoint's signing secret under **Settings → Webhooks → Edit Endpoint**.
+
+---
+
+## Common Error Codes
+
+<AccordionGroup>
+  <Accordion title="400 — Bad Request">
+    The request body is malformed or is missing one or more required fields. Check the `message` field in the response for details about which field failed validation, then correct your request payload and retry.
+  </Accordion>
+
+  <Accordion title="401 — Unauthorized">
+    The API key is missing, expired, or invalid. Ensure you are passing the key as `Authorization: Bearer <key>` and that the key has not been revoked in your dashboard. Generate a new key if necessary.
+  </Accordion>
+
+  <Accordion title="403 — Forbidden">
+    Your API key does not have the required scope for this operation, or the resource belongs to a different workspace. Verify the key's permissions under **Settings → API Keys** and update the scope as needed.
+  </Accordion>
+
+  <Accordion title="404 — Not Found">
+    The requested resource does not exist, has been deleted, or is not accessible with your current API key. Confirm the resource ID is correct and that it was created within the same workspace as your key.
+  </Accordion>
+
+  <Accordion title="429 — Too Many Requests">
+    You have exceeded the rate limit for your plan. Wait the number of seconds specified in the `Retry-After` response header before making another request, and implement exponential back-off to avoid repeated `429` errors.
+  </Accordion>
+
+  <Accordion title="500 — Internal Server Error">
+    An unexpected error occurred on the NeoXZ platform. The request ID in the response header (`X-Request-Id`) is useful when reporting this issue to support. Wait a moment and retry your request — most `500` errors are transient. If the issue persists, contact [support@neoxz.com](mailto:support@neoxz.com).
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Getting Support
+
+If you have worked through the steps above and the issue persists, the NeoXZ support team is here to help.
+
+- **Email:** [support@neoxz.com](mailto:support@neoxz.com)
+- **Response times:** Free plan — within 3 business days. Pro plan — within 1 business day. Enterprise plan — within 4 hours with a dedicated Slack channel.
+
+When contacting support, include the following to help us resolve your issue faster:
+
+- The `X-Request-Id` header value from the failed response
+- The full error response body
+- The endpoint and HTTP method you were calling
+- A description of what you expected to happen versus what actually happened
+
+<Note>
+  For security issues or suspected API key compromise, email [security@neoxz.com](mailto:security@neoxz.com) directly. Do not include sensitive keys or tokens in your support requests — provide only the last four characters so our team can identify the key.
+</Note>

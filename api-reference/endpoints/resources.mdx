@@ -1,0 +1,246 @@
+---
+title: "REST API Endpoints for Resources"
+sidebarTitle: "Resources"
+description: "Full reference for NeoXZ resource endpoints: list, create, retrieve, update, and delete resources via the REST API."
+---
+
+Resources are the core entities in NeoXZ. Use these endpoints to create, retrieve, update, and delete resources in your workspace. Every resource belongs to a workspace and carries an optional `metadata` object you can use to attach arbitrary structured data.
+
+---
+
+## List all resources
+
+Retrieve a paginated list of all resources in your workspace.
+
+```
+GET https://api.neoxz.com/v1/resources
+```
+
+<ParamField query="limit" type="integer" default={20}>
+  Maximum number of resources to return. Must be between 1 and 100.
+</ParamField>
+
+<ParamField query="cursor" type="string">
+  Pagination cursor returned as `next_cursor` from the previous response. Omit this parameter to start from the beginning.
+</ParamField>
+
+<CodeGroup>
+
+```bash Request
+curl https://api.neoxz.com/v1/resources?limit=2 \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```json Response
+{
+  "data": [
+    {
+      "id": "res_01hx4k2m9p",
+      "name": "Primary Widget",
+      "type": "widget",
+      "metadata": { "color": "blue" },
+      "created_at": "2024-01-10T08:00:00Z"
+    },
+    {
+      "id": "res_01hx4k3n7q",
+      "name": "Secondary Widget",
+      "type": "widget",
+      "metadata": {},
+      "created_at": "2024-01-11T09:15:00Z"
+    }
+  ],
+  "next_cursor": "cur_01hx4k9z2r",
+  "has_more": true
+}
+```
+
+</CodeGroup>
+
+<ResponseField name="data" type="array">
+  Array of resource objects matching the query.
+
+  <Expandable title="Resource object fields">
+    <ResponseField name="id" type="string">
+      Unique identifier for the resource.
+    </ResponseField>
+    <ResponseField name="name" type="string">
+      Human-readable name of the resource.
+    </ResponseField>
+    <ResponseField name="type" type="string">
+      The resource type as specified at creation time.
+    </ResponseField>
+    <ResponseField name="metadata" type="object">
+      Arbitrary key-value metadata attached to the resource.
+    </ResponseField>
+    <ResponseField name="created_at" type="string">
+      ISO 8601 timestamp recording when the resource was created.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="next_cursor" type="string">
+  Pass this value as the `cursor` query parameter to retrieve the next page of results. `null` when no further pages exist.
+</ResponseField>
+
+<ResponseField name="has_more" type="boolean">
+  `true` if additional pages of results are available.
+</ResponseField>
+
+---
+
+## Create a resource
+
+Create a new resource in your workspace.
+
+```
+POST https://api.neoxz.com/v1/resources
+```
+
+<ParamField body="name" type="string" required>
+  A human-readable name for the resource. Must be between 1 and 255 characters.
+</ParamField>
+
+<ParamField body="type" type="string" required>
+  The resource type. Use a consistent type identifier across your integration (for example, `widget` or `pipeline`).
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  An optional object of key-value pairs to attach to the resource. Keys must be strings; values may be strings, numbers, or booleans.
+</ParamField>
+
+<CodeGroup>
+
+```bash Request
+curl -X POST https://api.neoxz.com/v1/resources \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Primary Widget",
+    "type": "widget",
+    "metadata": { "color": "blue", "priority": 1 }
+  }'
+```
+
+```json Response
+{
+  "id": "res_01hx4k2m9p",
+  "name": "Primary Widget",
+  "type": "widget",
+  "metadata": { "color": "blue", "priority": 1 },
+  "created_at": "2024-01-10T08:00:00Z"
+}
+```
+
+</CodeGroup>
+
+---
+
+## Retrieve a resource
+
+Fetch a single resource by its ID.
+
+```
+GET https://api.neoxz.com/v1/resources/:id
+```
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the resource to retrieve.
+</ParamField>
+
+<CodeGroup>
+
+```bash Request
+curl https://api.neoxz.com/v1/resources/res_01hx4k2m9p \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```json Response
+{
+  "id": "res_01hx4k2m9p",
+  "name": "Primary Widget",
+  "type": "widget",
+  "metadata": { "color": "blue", "priority": 1 },
+  "created_at": "2024-01-10T08:00:00Z"
+}
+```
+
+</CodeGroup>
+
+---
+
+## Update a resource
+
+Update the name or metadata of an existing resource. Only the fields you provide are changed — omitted fields retain their current values.
+
+```
+PUT https://api.neoxz.com/v1/resources/:id
+```
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the resource to update.
+</ParamField>
+
+<ParamField body="name" type="string">
+  A new human-readable name for the resource.
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  A new metadata object. This **replaces** the existing metadata entirely — perform a read-modify-write if you want to preserve existing keys.
+</ParamField>
+
+<CodeGroup>
+
+```bash Request
+curl -X PUT https://api.neoxz.com/v1/resources/res_01hx4k2m9p \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Renamed Widget",
+    "metadata": { "color": "red", "priority": 2 }
+  }'
+```
+
+```json Response
+{
+  "id": "res_01hx4k2m9p",
+  "name": "Renamed Widget",
+  "type": "widget",
+  "metadata": { "color": "red", "priority": 2 },
+  "created_at": "2024-01-10T08:00:00Z"
+}
+```
+
+</CodeGroup>
+
+---
+
+## Delete a resource
+
+Permanently delete a resource from your workspace.
+
+```
+DELETE https://api.neoxz.com/v1/resources/:id
+```
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the resource to delete.
+</ParamField>
+
+<Warning>
+  Deletion is permanent and cannot be undone. All data associated with the resource — including its metadata — is immediately removed and cannot be recovered. Back up any data you need before calling this endpoint.
+</Warning>
+
+<CodeGroup>
+
+```bash Request
+curl -X DELETE https://api.neoxz.com/v1/resources/res_01hx4k2m9p \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```json Response
+HTTP/1.1 204 No Content
+```
+
+</CodeGroup>
+
+A successful deletion returns a `204 No Content` response with an empty body.

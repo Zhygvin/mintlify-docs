@@ -1,0 +1,197 @@
+---
+title: "NeoXZ API Error Codes and Responses"
+sidebarTitle: "Errors"
+description: "Complete reference for NeoXZ API error codes. Covers HTTP status codes, error response format, and how to handle each error type in your integration."
+---
+
+The NeoXZ API uses standard HTTP status codes to indicate the success or failure of every request. Codes in the `2xx` range indicate success, `4xx` codes indicate a problem with the request you sent, and `5xx` codes indicate a problem on NeoXZ's servers. All error responses include a machine-readable `error` field and a human-readable `message` so you can handle failures precisely and surface useful information to your users.
+
+## Error Response Format
+
+Every error response from the NeoXZ API follows the same JSON shape, regardless of the status code:
+
+```json
+{
+  "error": "not_found",
+  "message": "The requested resource does not exist.",
+  "request_id": "req_abc123"
+}
+```
+
+| Field        | Type   | Description                                                                                      |
+|--------------|--------|--------------------------------------------------------------------------------------------------|
+| `error`      | string | A stable, machine-readable error code. Use this in your `switch`/`if` logic, not `message`.     |
+| `message`    | string | A human-readable description of what went wrong. May change over time — do not parse it.        |
+| `request_id` | string | A unique identifier for this specific request. Include this when contacting NeoXZ support.       |
+
+<Tip>
+  When filing a support request with NeoXZ, always include the `request_id` from the error response. It allows the support team to locate your exact request in the system logs and diagnose the issue faster.
+</Tip>
+
+## HTTP Status Codes
+
+<AccordionGroup>
+  <Accordion title="200 OK">
+    The request succeeded. The response body contains the requested data or the result of the operation.
+
+    You will receive a `200` for successful `GET`, `PUT`, `PATCH`, and `DELETE` requests (where deletion returns the deleted object).
+
+    ```json
+    {
+      "id": "res_01hx9z3k2bvw4n5p",
+      "object": "resource",
+      "status": "active"
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="201 Created">
+    A new resource was successfully created. The response body contains the full representation of the newly created object, including its server-assigned `id` and `created_at` timestamp.
+
+    You will receive a `201` for successful `POST` requests that create a new record.
+
+    ```json
+    {
+      "id": "res_02ky0a4l3cwx5o6q",
+      "object": "resource",
+      "name": "My New Resource",
+      "status": "active",
+      "created_at": "2024-06-01T12:00:00Z"
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="400 Bad Request">
+    The server could not process the request because the request body was invalid, a required parameter was missing, or a field value failed validation.
+
+    Check the `message` field for details about which parameter caused the error. Fix the request before retrying — repeating an identical request will produce the same `400`.
+
+    ```json
+    {
+      "error": "invalid_request",
+      "message": "The 'name' field is required and cannot be blank.",
+      "request_id": "req_bad001"
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="401 Unauthorized">
+    The request did not include a valid API key. This occurs when the `Authorization` header is missing, the token is malformed, or the key has been revoked.
+
+    Verify that you are sending the header as `Authorization: Bearer YOUR_API_KEY` and that the key is active in your dashboard.
+
+    ```json
+    {
+      "error": "unauthorized",
+      "message": "Invalid or missing API key.",
+      "request_id": "req_auth001"
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="403 Forbidden">
+    The API key is valid and recognized, but it does not have the scope required to perform the requested operation. For example, a `read`-scoped key cannot create or delete resources.
+
+    Generate a new key with the appropriate scope, or contact your account administrator to update permissions.
+
+    ```json
+    {
+      "error": "forbidden",
+      "message": "Your API key does not have the 'write' scope required for this operation.",
+      "request_id": "req_auth002"
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="404 Not Found">
+    The resource you referenced does not exist. This can mean the `id` is incorrect, the resource was deleted, or you are querying a resource that belongs to a different workspace than the one your API key is scoped to.
+
+    Double-check the resource ID in your request path and confirm the resource exists in your dashboard.
+
+    ```json
+    {
+      "error": "not_found",
+      "message": "The requested resource does not exist.",
+      "request_id": "req_nf001"
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="409 Conflict">
+    The request conflicts with the current state of the server. This typically means you tried to create a resource that already exists — for example, registering a webhook URL that is already registered.
+
+    Fetch the existing resource and update it using a `PUT` or `PATCH` request instead of attempting to create a duplicate.
+
+    ```json
+    {
+      "error": "conflict",
+      "message": "A resource with this name already exists in your workspace.",
+      "request_id": "req_conf001"
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="429 Too Many Requests">
+    You have exceeded the rate limit for your plan. No further requests will be processed until the current window resets.
+
+    Check the `X-RateLimit-Reset` response header for the UTC epoch timestamp at which the window resets, and pause requests until that time. See the [API Overview](/api-reference/overview#rate-limiting) for per-plan limits.
+
+    ```json
+    {
+      "error": "rate_limit_exceeded",
+      "message": "You have exceeded your plan's rate limit. Please retry after the reset window.",
+      "request_id": "req_rl001"
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="500 Internal Server Error">
+    An unexpected error occurred on NeoXZ's servers. This is not caused by your request — it indicates a problem on our side.
+
+    Retry the request using exponential backoff (see below). If the error persists for more than a few minutes, check the [NeoXZ status page](https://status.neoxz.com) for any ongoing incidents and contact support with your `request_id`.
+
+    ```json
+    {
+      "error": "internal_server_error",
+      "message": "An unexpected error occurred. Please try again or contact support.",
+      "request_id": "req_srv001"
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Retrying Failed Requests
+
+Not all errors warrant a retry. Use the following guidance to decide whether to retry automatically or surface the error to your user for action.
+
+| Status | Retryable | Recommended action                                                                              |
+|--------|-----------|-------------------------------------------------------------------------------------------------|
+| `400`  | No        | Fix the request — the same request will always fail. Log the error and notify the user.         |
+| `401`  | No        | Check your API key configuration. Retrying with the same key will produce the same result.      |
+| `403`  | No        | The key lacks the required scope. Update permissions or generate a new key.                     |
+| `404`  | No        | The resource does not exist. Verify the ID and workspace context before retrying.               |
+| `409`  | No        | A conflicting resource already exists. Fetch and update the existing record instead.            |
+| `429`  | **Yes**   | Wait until `X-RateLimit-Reset`, then retry. Consider reducing your request rate.                |
+| `500`  | **Yes**   | Retry with exponential backoff. Start with a 1-second delay, doubling up to a maximum of 32 seconds. |
+
+When retrying `500` errors, use **exponential backoff with jitter** to avoid thundering-herd problems:
+
+```javascript
+async function retryWithBackoff(fn, maxRetries = 5) {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (err.status !== 500 && err.status !== 429) throw err;
+      if (attempt === maxRetries - 1) throw err;
+
+      const delay = Math.min(1000 * 2 ** attempt + Math.random() * 500, 32000);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+}
+```
+
+<Note>
+  For `429` errors, respect the `X-RateLimit-Reset` header value instead of computing a backoff delay. Retrying before the window resets will produce additional `429` responses and does not count toward your limit recovery.
+</Note>

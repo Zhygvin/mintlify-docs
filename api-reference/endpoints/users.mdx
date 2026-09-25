@@ -1,0 +1,206 @@
+---
+title: "REST API Endpoints for Users"
+sidebarTitle: "Users"
+description: "Manage users in your NeoXZ workspace via the REST API. List team members, retrieve user profiles, and update user roles."
+---
+
+The Users API lets you manage team members programmatically — retrieve profiles, list workspace members, and update roles. Use these endpoints to automate onboarding workflows, synchronize user data with external systems, or build admin tooling for your workspace.
+
+---
+
+## List all users
+
+Retrieve a paginated list of all users who are members of your workspace.
+
+```
+GET https://api.neoxz.com/v1/users
+```
+
+<ParamField query="limit" type="integer" default={20}>
+  Maximum number of users to return. Must be between 1 and 100.
+</ParamField>
+
+<ParamField query="cursor" type="string">
+  Pagination cursor returned as `next_cursor` from the previous response. Omit this parameter to start from the beginning.
+</ParamField>
+
+<CodeGroup>
+
+```bash Request
+curl https://api.neoxz.com/v1/users?limit=2 \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```json Response
+{
+  "data": [
+    {
+      "id": "usr_01hx7a2b3c",
+      "email": "alice@example.com",
+      "name": "Alice Nguyen",
+      "role": "admin",
+      "created_at": "2024-01-05T12:00:00Z"
+    },
+    {
+      "id": "usr_01hx7a2d4e",
+      "email": "bob@example.com",
+      "name": "Bob Patel",
+      "role": "write",
+      "created_at": "2024-01-07T14:30:00Z"
+    }
+  ],
+  "next_cursor": "cur_01hx7b9z5f",
+  "has_more": true
+}
+```
+
+</CodeGroup>
+
+<ResponseField name="data" type="array">
+  Array of user objects belonging to your workspace.
+
+  <Expandable title="User object fields">
+    <ResponseField name="id" type="string">
+      Unique identifier for the user.
+    </ResponseField>
+    <ResponseField name="email" type="string">
+      The user's email address.
+    </ResponseField>
+    <ResponseField name="name" type="string">
+      The user's display name.
+    </ResponseField>
+    <ResponseField name="role" type="string">
+      The user's role in the workspace. One of `read`, `write`, or `admin`.
+    </ResponseField>
+    <ResponseField name="created_at" type="string">
+      ISO 8601 timestamp recording when the user joined the workspace.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="next_cursor" type="string">
+  Pass this value as the `cursor` query parameter to retrieve the next page of results. `null` when no further pages exist.
+</ResponseField>
+
+<ResponseField name="has_more" type="boolean">
+  `true` if additional pages of results are available.
+</ResponseField>
+
+---
+
+## Retrieve a user
+
+Fetch a single user by their ID. Use the special alias `me` to retrieve the profile associated with the API key making the request.
+
+```
+GET https://api.neoxz.com/v1/users/:id
+```
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the user to retrieve. Pass `me` to retrieve the currently authenticated user.
+</ParamField>
+
+<CodeGroup>
+
+```bash Retrieve by ID
+curl https://api.neoxz.com/v1/users/usr_01hx7a2b3c \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```bash Retrieve current user
+curl https://api.neoxz.com/v1/users/me \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```json Response
+{
+  "id": "usr_01hx7a2b3c",
+  "email": "alice@example.com",
+  "name": "Alice Nguyen",
+  "role": "admin",
+  "created_at": "2024-01-05T12:00:00Z"
+}
+```
+
+</CodeGroup>
+
+---
+
+## Update a user
+
+Update the role of a workspace member. Only the fields you provide are changed.
+
+```
+PUT https://api.neoxz.com/v1/users/:id
+```
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the user to update.
+</ParamField>
+
+<ParamField body="role" type="string" required>
+  The new role to assign to the user. Must be one of:
+  - `read` — can view resources but not modify them
+  - `write` — can create and modify resources
+  - `admin` — full access, including managing users and workspace settings
+</ParamField>
+
+<Note>
+  Only users with the `admin` role can change another user's role. Attempts to update roles from a `read` or `write` account will return a `403 Forbidden` error.
+</Note>
+
+<CodeGroup>
+
+```bash Request
+curl -X PUT https://api.neoxz.com/v1/users/usr_01hx7a2d4e \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "role": "admin"
+  }'
+```
+
+```json Response
+{
+  "id": "usr_01hx7a2d4e",
+  "email": "bob@example.com",
+  "name": "Bob Patel",
+  "role": "admin",
+  "created_at": "2024-01-07T14:30:00Z"
+}
+```
+
+</CodeGroup>
+
+---
+
+## Remove a user
+
+Remove a user from your workspace. The user's account is not deleted — they simply lose access to this workspace.
+
+```
+DELETE https://api.neoxz.com/v1/users/:id
+```
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the user to remove from the workspace.
+</ParamField>
+
+<Warning>
+  Removing a user immediately revokes their access to all resources in this workspace. Any API keys scoped to this workspace that belong to the removed user will also be invalidated. This action cannot be undone without re-inviting the user.
+</Warning>
+
+<CodeGroup>
+
+```bash Request
+curl -X DELETE https://api.neoxz.com/v1/users/usr_01hx7a2d4e \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```json Response
+HTTP/1.1 204 No Content
+```
+
+</CodeGroup>
+
+A successful removal returns a `204 No Content` response with an empty body.

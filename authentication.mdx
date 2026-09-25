@@ -1,0 +1,85 @@
+---
+title: "Authenticate API Requests to NeoXZ"
+sidebarTitle: "Authentication"
+description: "Learn how to authenticate with the NeoXZ API using API keys. Includes how to generate keys, pass them in requests, and handle auth errors."
+---
+
+NeoXZ uses API key authentication to secure every request made to the platform. All API requests must include your API key in the `Authorization` header as a Bearer token — requests made without a valid key are rejected immediately. This model keeps authentication simple and stateless while giving you full control over access through scoped keys, instant rotation, and one-click revocation.
+
+<Warning>
+  Never share your API key publicly, include it in client-side code, or commit it to source control. Treat it like a password. If a key is ever exposed, revoke it immediately from the dashboard and generate a new one.
+</Warning>
+
+## Getting Your API Key
+
+Generate your API key directly from the NeoXZ dashboard:
+
+1. Log in to your account at [app.neoxz.com](https://app.neoxz.com).
+2. Open **Settings** in the left sidebar and select **API Keys**.
+3. Click **New Key**, enter a descriptive name for the key (for example, `production-server` or `dev-local`), and select the appropriate scope.
+4. Click **Create** and copy the key value. NeoXZ displays the full key only once — store it in a secure location before closing the dialog.
+
+## Making Authenticated Requests
+
+Include your API key in the `Authorization` header of every request using the `Bearer` scheme.
+
+<CodeGroup>
+  ```bash curl
+  curl -X GET https://api.neoxz.com/api/resources \
+    -H "Authorization: Bearer YOUR_API_KEY" \
+    -H "Content-Type: application/json"
+  ```
+
+  ```javascript JavaScript
+  const response = await fetch("https://api.neoxz.com/api/resources", {
+    method: "GET",
+    headers: {
+      "Authorization": "Bearer YOUR_API_KEY",
+      "Content-Type": "application/json",
+    },
+  });
+
+  const data = await response.json();
+  console.log(data);
+  ```
+
+  ```python Python
+  import requests
+
+  url = "https://api.neoxz.com/api/resources"
+  headers = {
+      "Authorization": "Bearer YOUR_API_KEY",
+      "Content-Type": "application/json",
+  }
+
+  response = requests.get(url, headers=headers)
+  print(response.json())
+  ```
+</CodeGroup>
+
+## API Key Scopes
+
+When you create an API key, you assign it a scope that controls what actions it can perform. Choose the most restrictive scope that satisfies your use case.
+
+| Scope | Permissions | Recommended Use |
+|---|---|---|
+| **Read-only** | `GET` requests only. Can retrieve resources, list results, and read configuration. Cannot create, update, or delete anything. | Dashboards, reporting tools, read-heavy integrations |
+| **Read-write** | Full access to `GET`, `POST`, `PUT`, `PATCH`, and `DELETE` endpoints. Can create, modify, and remove resources. | Backend services, automation workflows, full integrations |
+
+## Rotating & Revoking Keys
+
+Rotate or revoke your API keys at any time from the dashboard without downtime:
+
+- **Rotate a key** — In **Settings → API Keys**, click the options menu next to the key you want to rotate and select **Rotate**. NeoXZ generates a new key value and immediately invalidates the old one. Update your services with the new key before confirming the rotation.
+- **Revoke a key** — Click **Revoke** to permanently disable the key. Revoked keys cannot be restored — you'll need to create a new key if you need access again.
+
+Best practice is to rotate keys on a regular schedule and immediately revoke any key you suspect has been compromised.
+
+## Authentication Errors
+
+If your request is not authenticated correctly, the API returns one of the following error responses:
+
+| Status Code | Error | Meaning |
+|---|---|---|
+| `401 Unauthorized` | `invalid_api_key` | The `Authorization` header is missing, malformed, or contains a key that does not exist. Verify that you are passing the header correctly and that the key value is accurate. |
+| `403 Forbidden` | `insufficient_scope` | The API key is valid but does not have permission to perform the requested action. The key's scope is too restrictive for this endpoint — generate a new key with the appropriate scope. |

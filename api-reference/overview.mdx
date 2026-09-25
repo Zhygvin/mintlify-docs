@@ -1,0 +1,125 @@
+---
+title: "NeoXZ REST API Reference Overview"
+sidebarTitle: "Overview"
+description: "The NeoXZ REST API lets you manage resources, users, and webhooks programmatically. Learn the base URL, versioning, and response formats."
+---
+
+The NeoXZ REST API gives you full programmatic access to your workspace. Whether you're automating resource management, integrating webhooks, or building on top of NeoXZ's platform, every operation you can perform in the dashboard is available through the API. All endpoints return JSON.
+
+## Base URL
+
+All API requests are made to the following base URL. Every endpoint documented in this reference is relative to it.
+
+```
+https://api.neoxz.com/v1
+```
+
+For example, to list all resources, you send a request to `https://api.neoxz.com/v1/resources`.
+
+## Versioning
+
+The current API version is **v1**, reflected in the base URL. NeoXZ is committed to backward compatibility within a version — we will never introduce breaking changes to an existing version without first releasing a new versioned API (e.g., `/v2`) and providing a migration window. Non-breaking additions such as new optional fields or new endpoints may be added to the current version at any time.
+
+<Note>
+  Subscribe to the [NeoXZ changelog](https://neoxz.com/changelog) to receive advance notice of any upcoming versioning changes.
+</Note>
+
+## Request Format
+
+For all `POST` and `PUT` requests, send a JSON body and include the `Content-Type` header:
+
+```
+Content-Type: application/json
+```
+
+Requests that omit this header or send a malformed body will receive a `400 Bad Request` response. `GET` and `DELETE` requests do not require a body.
+
+## Response Format
+
+All responses — success and error alike — are returned as JSON objects. Use the HTTP status code to determine the outcome, then parse the body for details.
+
+**Success response**
+
+```json
+{
+  "id": "res_01hx9z3k2bvw4n5p",
+  "object": "resource",
+  "name": "My Resource",
+  "status": "active",
+  "created_at": "2024-06-01T12:00:00Z"
+}
+```
+
+**Error response**
+
+```json
+{
+  "error": "not_found",
+  "message": "The requested resource does not exist.",
+  "request_id": "req_abc123"
+}
+```
+
+The `error` field is a stable, machine-readable code you can use in your error-handling logic. The `message` field is a human-readable explanation. The `request_id` uniquely identifies the request — include it when contacting NeoXZ support.
+
+## Rate Limiting
+
+NeoXZ enforces rate limits on a per-API-key basis. The limits vary by plan tier:
+
+| Plan       | Requests per minute |
+|------------|---------------------|
+| Free       | 60                  |
+| Pro        | 600                 |
+| Enterprise | Custom              |
+
+Every API response includes the following headers so you can monitor your current usage:
+
+| Header                  | Description                                                      |
+|-------------------------|------------------------------------------------------------------|
+| `X-RateLimit-Limit`     | The maximum number of requests allowed in the current window.    |
+| `X-RateLimit-Remaining` | The number of requests remaining in the current window.          |
+| `X-RateLimit-Reset`     | The UTC epoch timestamp (in seconds) when the window resets.     |
+
+When you exceed your limit, the API returns a `429 Too Many Requests` response. Wait until the time indicated by `X-RateLimit-Reset` before retrying, or implement exponential backoff.
+
+## Pagination
+
+Endpoints that return lists of objects use **cursor-based pagination**. This approach is stable and efficient — even if records are added or deleted between requests, your pages won't skip or duplicate items.
+
+Pass the following query parameters to control pagination:
+
+| Parameter | Type    | Description                                                                 |
+|-----------|---------|-----------------------------------------------------------------------------|
+| `limit`   | integer | The number of results to return per page. Defaults to `20`, maximum `100`.  |
+| `cursor`  | string  | The pagination cursor returned by the previous request's `next_cursor`.     |
+
+**Example paginated response**
+
+```json
+{
+  "data": [
+    { "id": "res_01", "name": "Resource One" },
+    { "id": "res_02", "name": "Resource Two" }
+  ],
+  "next_cursor": "cur_eyJpZCI6InJlc18wMiJ9",
+  "has_more": true
+}
+```
+
+When `has_more` is `false`, you have retrieved the last page. When it is `true`, pass the value of `next_cursor` as the `cursor` query parameter in your next request to fetch the following page.
+
+---
+
+## Explore the API
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/api-reference/authentication">
+    Learn how to authenticate your requests using Bearer tokens and manage API key scopes.
+  </Card>
+  <Card title="Errors" icon="circle-exclamation" href="/api-reference/errors">
+    Understand HTTP status codes, error response shapes, and how to handle failures gracefully.
+  </Card>
+  <Card title="Resources Endpoints" icon="server" href="/api-reference/endpoints/resources">
+    Browse the full reference for creating, reading, updating, and deleting resources.
+  </Card>
+</CardGroup>

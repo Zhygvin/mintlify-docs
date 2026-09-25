@@ -1,0 +1,90 @@
+---
+title: "Configure NeoXZ for Your Environment"
+sidebarTitle: "Configuration"
+description: "Learn how to configure NeoXZ settings through the dashboard and API, including notifications, resource limits, and integration options."
+---
+
+NeoXZ offers flexible configuration options to match your workflow — from notification preferences to resource quotas. Whether you prefer clicking through the dashboard or scripting changes via the API, every setting is accessible both ways so you can manage configuration however fits your team best.
+
+## Dashboard Configuration
+
+The NeoXZ dashboard organizes all workspace settings under the **Settings** menu in the left sidebar. Each tab covers a distinct area of configuration:
+
+| Tab | What you configure |
+|---|---|
+| **General** | Workspace display name, timezone, and plan details. |
+| **Notifications** | Email and in-app alert preferences for workspace events. |
+| **API Keys** | Create, name, rotate, and revoke API keys for programmatic access. |
+| **Webhooks** | Register endpoint URLs and subscribe to the events NeoXZ will deliver to them. |
+
+Navigate to each tab and review the defaults before you start building integrations — getting these right early saves you time later.
+
+## Per-Resource Configuration
+
+Every resource in NeoXZ supports additional configuration at the individual level. When you create or edit a resource, you can attach the following:
+
+- **Metadata:** Arbitrary key-value pairs for storing context your app needs (e.g., `environment: production` or `owner: platform-team`).
+- **Labels:** Short tags used to filter and group resources across the dashboard and API responses.
+- **Custom Fields:** Typed fields (string, number, boolean, date) that you define in **Settings** → **Custom Fields** and then populate per resource.
+
+To set metadata or labels via the API, include them in the request body when creating or updating a resource:
+
+```json
+{
+  "name": "my-resource",
+  "metadata": {
+    "environment": "production",
+    "owner": "platform-team"
+  },
+  "labels": ["critical", "reviewed"]
+}
+```
+
+## Notification Settings
+
+NeoXZ can notify you by email whenever key events occur in your workspace — resource creation, failures, quota warnings, and more. You can enable or disable each event type individually.
+
+<Tabs>
+  <Tab title="Dashboard">
+    1. Go to **Settings** → **Notifications**.
+    2. Browse the list of available event types (e.g., *Resource Created*, *Resource Failed*, *Quota Warning*).
+    3. Toggle each event on or off using the switches in the **Email** and **In-App** columns.
+    4. Click **Save Preferences** to apply your changes.
+
+    Changes take effect immediately — there is no delay between saving and the new preference being applied to incoming events.
+  </Tab>
+
+  <Tab title="API">
+    Send a `PATCH` request to the notifications endpoint with an object mapping event names to enabled/disabled booleans:
+
+    ```bash
+    curl -X PATCH https://api.neoxz.com/v1/workspace/notifications \
+      -H "Authorization: Bearer YOUR_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "notifications": {
+          "resource.created": true,
+          "resource.failed": true,
+          "quota.warning": false
+        }
+      }'
+    ```
+
+    The API returns the full updated notification preferences object on success. Use a `GET` request to the same endpoint to read current preferences without making changes.
+  </Tab>
+</Tabs>
+
+## Environment Variables
+
+In your own application, you only need two environment variables to start communicating with NeoXZ:
+
+```bash
+NEOXZ_API_KEY=your_api_key
+NEOXZ_API_BASE_URL=https://api.neoxz.com/v1
+```
+
+Set `NEOXZ_API_KEY` to the key you generated in the dashboard. Use `NEOXZ_API_BASE_URL` to keep the base URL configurable — this makes it easy to point different environments (development, staging, production) at different API versions without touching your code.
+
+<Tip>
+  During local development, store these values in a `.env` file at the root of your project and load them with a library like `dotenv` (Node.js), `python-dotenv` (Python), or your framework's built-in support. In staging and production environments, use a dedicated secrets manager — such as AWS Secrets Manager, HashiCorp Vault, or your cloud provider's equivalent — instead of committing values to source control.
+</Tip>

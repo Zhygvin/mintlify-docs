@@ -1,0 +1,67 @@
+---
+title: "NeoXZ Platform Overview and Architecture"
+sidebarTitle: "Overview"
+description: "Understand how NeoXZ works: the platform's core components, request lifecycle, and the building blocks you use to integrate with your systems."
+---
+
+NeoXZ is a full-stack web platform that gives you a unified API, robust authentication, real-time webhooks, and flexible configuration — all designed to integrate cleanly into your existing systems. Whether you're building a lightweight integration or a complex event-driven architecture, NeoXZ provides the primitives you need to move fast without sacrificing reliability or security.
+
+## Core Components
+
+NeoXZ is made up of five primary building blocks. Understanding each one helps you design integrations that are efficient, maintainable, and aligned with how the platform operates.
+
+<CardGroup cols={2}>
+  <Card title="API Layer" icon="code">
+    The REST API is your primary interface to NeoXZ. Every operation — reading data, creating resources, triggering actions — happens through versioned HTTP endpoints that return predictable JSON responses.
+  </Card>
+  <Card title="Authentication" icon="lock">
+    NeoXZ uses API keys and optional OAuth 2.0 flows to verify your identity on every request. Tokens are scoped to environments and roles, so you control exactly what each integration can access.
+  </Card>
+  <Card title="Resources" icon="database">
+    Resources are the core data entities in NeoXZ. They represent the objects you create, manage, and query through the API — such as projects, configurations, or records specific to your workspace.
+  </Card>
+  <Card title="Webhooks" icon="bolt">
+    Webhooks let NeoXZ push real-time event notifications to your server the moment something changes. Instead of polling, you receive a signed HTTP POST whenever a relevant event occurs.
+  </Card>
+  <Card title="Configuration" icon="sliders">
+    NeoXZ is configurable at the workspace, environment, and resource level. Use configuration options to tailor rate limits, retry behavior, webhook secrets, and more to match your operational requirements.
+  </Card>
+</CardGroup>
+
+## Request Lifecycle
+
+Every API call you make to NeoXZ follows a consistent lifecycle. Tracing this flow helps you debug issues quickly and reason about latency, errors, and retries.
+
+<Steps>
+  <Step title="Your app sends a request">
+    Your application sends an HTTPS request to a NeoXZ API endpoint, including your API key in the `Authorization` header and any required parameters in the request body or query string.
+  </Step>
+  <Step title="NeoXZ authenticates the request">
+    NeoXZ validates your API key, checks that the key is active and scoped to the correct environment, and verifies that the associated role has permission to perform the requested operation.
+  </Step>
+  <Step title="NeoXZ routes to the resource">
+    Once authenticated, the platform routes the request to the appropriate resource handler. Business logic is applied, data is read from or written to the underlying store, and any triggered events are queued.
+  </Step>
+  <Step title="NeoXZ returns a response">
+    The API returns a structured JSON response with an appropriate HTTP status code. Successful responses include the resource data; error responses include a machine-readable `error.code` and a human-readable `error.message`.
+  </Step>
+</Steps>
+
+## Environments
+
+NeoXZ separates your work into two isolated environments: **development** and **production**. Each environment has its own API keys, resources, and webhook configurations — changes in one never affect the other.
+
+| Environment | Purpose | Base URL |
+|---|---|---|
+| Development | Build and test integrations safely without affecting live data | `https://api.neoxz.io/v1/dev` |
+| Production | Serve real users and live workloads | `https://api.neoxz.io/v1` |
+
+To switch between environments, replace the API key you use in the `Authorization` header. Your development key starts with `nxz_dev_` and your production key starts with `nxz_live_`. All other request structures remain identical, so promoting an integration from development to production requires only a key swap.
+
+<Note>
+  Keep your production API keys out of source control. Use environment variables or a secrets manager to inject them at runtime.
+</Note>
+
+<Info>
+  Ready to make your first API call? Head to the [Quickstart](/quickstart) for a step-by-step walkthrough that takes you from zero to a working integration in minutes.
+</Info>

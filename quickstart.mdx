@@ -1,47 +1,58 @@
 ---
-title: "Quickstart"
-description: "Begin with a guide on the fastest path to a successful outcome"
+title: "Get Started with NeoXZ in Minutes"
+sidebarTitle: "Quickstart"
+description: "Create your NeoXZ account, obtain your API key, and make your first successful API call in under five minutes."
 ---
 
-Describe how someone begins using your product. What is the first thing they need to do? Are there any prerequisites?
-
-A quickstart should take someone from zero to using your product. They'll get a quick win and a sense of what they can accomplish.
-
-## Prerequisites
-
-Before you begin, you must have:
-
-- Requirement one (for example, Node.js 18+, a free account, an API key)
-- Requirement two (for example, a compatible device, a compatible browser, a compatible operating system)
-
-## Get started
+This guide walks you through everything you need to go from a blank slate to a working NeoXZ integration. By the end, you'll have a verified account, a live API key, and a successful API response in your terminal — a solid foundation to build everything else on.
 
 <Steps>
-  <Step title="Install">
-    Describe how to install your product or sign up.
-
-    ```bash
-    npm install your-package
-    ```
+  <Step title="Create Your Account">
+    Navigate to [app.neoxz.com](https://app.neoxz.com) and click **Sign Up**. Enter your email address and choose a password, then confirm your email using the link NeoXZ sends you. Once confirmed, you'll land in your NeoXZ dashboard and your workspace will be ready to use.
   </Step>
-  <Step title="Configure">
-    Describe any setup or configuration needed before first use.
 
-    ```bash
-    your-cli init
-    ```
+  <Step title="Generate an API Key">
+    In the dashboard, open the **Settings** menu in the left sidebar and select **API Keys**. Click **New Key**, give your key a descriptive name (for example, `my-first-key`), and click **Create**. Copy the key value immediately — NeoXZ only displays it once for security reasons.
+
+    <Tip>
+      Store your API key in an environment variable or a secrets manager such as AWS Secrets Manager, HashiCorp Vault, or your CI/CD platform's secret store. Never hard-code it in your source files.
+    </Tip>
   </Step>
-  <Step title="Run it">
-    Show the first thing a user does to see it working.
+
+  <Step title="Make Your First API Call">
+    With your API key in hand, run the following command in your terminal. Replace `YOUR_API_KEY` with the key you copied in the previous step.
 
     ```bash
-    your-cli start
+    curl -X GET https://api.neoxz.com/api/resources \
+      -H "Authorization: Bearer YOUR_API_KEY" \
+      -H "Content-Type: application/json"
     ```
+
+    A successful response returns a `200 OK` status and a JSON payload listing your available resources:
+
+    ```json
+    {
+      "status": "success",
+      "data": {
+        "resources": [],
+        "total": 0,
+        "page": 1,
+        "per_page": 20
+      },
+      "meta": {
+        "request_id": "req_01hx9z3k4mfgvb2tjd8cqe7pna",
+        "timestamp": "2024-06-01T12:00:00Z"
+      }
+    }
+    ```
+
+    An empty `resources` array is expected on a fresh account — it means authentication worked perfectly and your workspace is ready to populate.
+  </Step>
+
+  <Step title="Explore Further">
+    Now that you have a working connection, keep building:
+
+    - Read the [Concepts Overview](/concepts/overview) to understand how NeoXZ resources, events, and configuration fit together.
+    - Browse the [API Reference](/api-reference/overview) for a complete list of endpoints, request parameters, and response schemas.
   </Step>
 </Steps>
-
-<Tip>
-  Give people a way to get help. This could be a link to a support page, a chat with a customer support agent, or a forum for your product.
-
-  Example: Need help? Reach out to us at [support@yourcompany.com](mailto:support@yourcompany.com).
-</Tip>

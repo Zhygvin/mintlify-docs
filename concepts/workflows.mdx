@@ -1,0 +1,176 @@
+---
+title: "Common NeoXZ Workflows and Integration Patterns"
+sidebarTitle: "Workflows"
+description: "Explore the most common integration workflows in NeoXZ: managing resources, reacting to events, and automating actions with webhooks."
+---
+
+A workflow in NeoXZ is a repeatable sequence of API calls, webhook interactions, and business logic that achieves a specific integration goal. Rather than treating the API as a collection of isolated endpoints, thinking in workflows helps you design systems that are coherent, resilient, and easy to reason about. This page walks you through the three patterns you'll reach for most often: CRUD operations on resources, event-driven reactions via webhooks, and full automation pipelines that chain events to actions.
+
+## CRUD Workflow
+
+The most fundamental workflow is creating, reading, updating, and deleting resources. Use this pattern whenever your application needs to manage NeoXZ data directly — provisioning objects, keeping records in sync, or cleaning up stale data.
+
+<Steps>
+  <Step title="Create a resource">
+    Send a `POST` request to `/v1/resources` with a `name`, `type`, and optional `metadata`. NeoXZ returns the newly created resource object, including its generated `id`.
+
+    ```bash
+    curl --request POST \
+      --url https://api.neoxz.io/v1/resources \
+      --header "Authorization: Bearer nxz_live_YOUR_API_KEY" \
+      --header "Content-Type: application/json" \
+      --data '{
+        "name": "primary-config",
+        "type": "config",
+        "metadata": {
+          "environment": "production",
+          "owner_team": "platform"
+        }
+      }'
+    ```
+  </Step>
+  <Step title="Read a resource">
+    Send a `GET` request to `/v1/resources/{id}` using the `id` returned at creation time. NeoXZ returns the full resource object in its current state.
+
+    ```bash
+    curl --request GET \
+      --url https://api.neoxz.io/v1/resources/res_01hxyz123abc \
+      --header "Authorization: Bearer nxz_live_YOUR_API_KEY"
+    ```
+  </Step>
+  <Step title="Update a resource">
+    Send a `PATCH` request to `/v1/resources/{id}` with only the fields you want to change. NeoXZ performs a partial update — fields you omit are left untouched.
+
+    ```bash
+    curl --request PATCH \
+      --url https://api.neoxz.io/v1/resources/res_01hxyz123abc \
+      --header "Authorization: Bearer nxz_live_YOUR_API_KEY" \
+      --header "Content-Type: application/json" \
+      --data '{
+        "metadata": {
+          "version": "2"
+        }
+      }'
+    ```
+  </Step>
+  <Step title="Delete a resource">
+    Send a `DELETE` request to `/v1/resources/{id}`. NeoXZ permanently removes the resource and emits a `resource.deleted` event. The response is `204 No Content` on success.
+
+    ```bash
+    curl --request DELETE \
+      --url https://api.neoxz.io/v1/resources/res_01hxyz123abc \
+      --header "Authorization: Bearer nxz_live_YOUR_API_KEY"
+    ```
+  </Step>
+</Steps>
+
+<Note>
+  List all resources in your workspace with `GET /v1/resources`. Use the `type` and `metadata` query parameters to filter results without fetching the entire collection.
+</Note>
+
+## Event-Driven Workflow
+
+Instead of polling the API to detect changes, you can register a webhook endpoint and let NeoXZ push notifications to your server in real time. This pattern is more efficient, more responsive, and easier to scale than polling.
+
+<Steps>
+  <Step title="Set up your webhook endpoint">
+    Register a publicly accessible HTTPS URL in your NeoXZ dashboard under **Settings → Webhooks**. Specify which event types you want to receive (e.g., `resource.created`, `resource.updated`) and save the signing secret NeoXZ generates for you.
+  </Step>
+  <Step title="Receive the event payload">
+    When a matching event occurs, NeoXZ sends a signed `POST` request to your endpoint. The request body is a JSON event object and includes an `X-NeoXZ-Signature` header you use to verify authenticity.
+
+    ```json
+    {
+      "id": "evt_77pqrs789ghi",
+      "type": "resource.created",
+      "payload": {
+        "id": "res_01hxyz123abc",
+        "name": "primary-config",
+        "type": "config",
+        "created_at": "2024-06-01T12:00:00Z",
+        "metadata": {
+          "environment": "production"
+        }
+      },
+      "timestamp": "2024-06-01T12:00:01Z"
+    }
+    ```
+  </Step>
+  <Step title="Respond with 2xx immediately">
+    Your endpoint must return a `200 OK` (or any `2xx` status) within **5 seconds**. NeoXZ treats any non-2xx response or timeout as a delivery failure and retries with exponential backoff. Perform heavy processing asynchronously after acknowledging the request.
+  </Step>
+</Steps>
+
+<Warning>
+  Always verify the `X-NeoXZ-Signature` header before processing a webhook payload. Skipping signature verification exposes your endpoint to spoofed requests. See the [Webhooks guide](/api-reference/endpoints/webhooks) for the full verification algorithm.
+</Warning>
+
+## Automation Workflow
+
+The automation workflow extends event-driven integration by wiring received events directly to follow-up actions — calling external services, updating records, sending notifications, or triggering other API calls. This turns NeoXZ into the hub of a self-running pipeline.
+
+The example below shows a minimal Node.js webhook handler that verifies the incoming request, parses the event, and dispatches to action handlers based on event type:
+
+```javascript
+import express from "express";
+import crypto from "crypto";
+
+const app = express();
+const WEBHOOK_SECRET = process.env.NEOXZ_WEBHOOK_SECRET;
+
+// Parse raw body for signature verification
+app.use("/webhook", express.raw({ type: "application/json" }));
+
+app.post("/webhook", (req, res) => {
+  // 1. Verify the signature
+  const signature = req.headers["x-neoxz-signature"];
+  const expectedSig = crypto
+    .createHmac("sha256", WEBHOOK_SECRET)
+    .update(req.body)
+    .digest("hex");
+
+  if (signature !== `sha256=${expectedSig}`) {
+    return res.status(401).json({ error: "Invalid signature" });
+  }
+
+  // 2. Acknowledge immediately
+  res.status(200).send("OK");
+
+  // 3. Process the event asynchronously
+  const event = JSON.parse(req.body);
+
+  switch (event.type) {
+    case "resource.created":
+      handleResourceCreated(event.payload);
+      break;
+    case "resource.updated":
+      handleResourceUpdated(event.payload);
+      break;
+    case "resource.deleted":
+      handleResourceDeleted(event.payload);
+      break;
+    default:
+      console.log(`Unhandled event type: ${event.type}`);
+  }
+});
+
+function handleResourceCreated(resource) {
+  // Trigger downstream automation — e.g., notify a Slack channel,
+  // provision dependent infrastructure, or sync to an external system.
+  console.log(`New resource created: ${resource.id} (${resource.name})`);
+}
+
+function handleResourceUpdated(resource) {
+  console.log(`Resource updated: ${resource.id}`);
+}
+
+function handleResourceDeleted(resource) {
+  console.log(`Resource deleted: ${resource.id}`);
+}
+
+app.listen(3000, () => console.log("Webhook handler listening on port 3000"));
+```
+
+<Tip>
+  Make your webhook handler **idempotent**. NeoXZ may deliver the same event more than once during retries. Use the event `id` as a deduplication key — store processed event IDs in a cache or database and skip processing if you've already handled a given ID. This ensures that retried deliveries don't cause duplicate side effects like double-charging a customer or provisioning a resource twice.
+</Tip>

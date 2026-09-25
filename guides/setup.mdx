@@ -1,0 +1,76 @@
+---
+title: "Set Up Your NeoXZ Workspace"
+sidebarTitle: "Setup"
+description: "Step-by-step guide to setting up your NeoXZ workspace: create your account, invite team members, and prepare for your first integration."
+---
+
+This guide walks you through setting up NeoXZ from scratch, from account creation to having a production-ready workspace. By the end, you'll have a fully configured workspace, your team onboarded, and your first API key ready to use.
+
+## Getting Started
+
+<Steps>
+  <Step title="Create your account">
+    Navigate to [app.neoxz.com](https://app.neoxz.com) and click **Sign Up**. Enter your email address and choose a strong password, or sign up using your Google or GitHub account for a faster experience.
+
+    Once you submit the form, check your inbox for a verification email and click the confirmation link to activate your account.
+  </Step>
+
+  <Step title="Create your first workspace">
+    After verifying your email, you'll be prompted to create your first workspace. Give it a meaningful name — typically your company or project name — and select the plan that best fits your needs.
+
+    - **Name:** Choose something recognizable to your team (e.g., `Acme Corp` or `My Project`).
+    - **Plan:** Start with the Free plan to explore features, then upgrade as your usage grows.
+
+    Click **Create Workspace** to continue.
+  </Step>
+
+  <Step title="Invite team members">
+    Bring your team into the workspace so everyone can collaborate from day one.
+
+    1. Open **Settings** from the left sidebar.
+    2. Navigate to the **Team** tab.
+    3. Click **Invite Member** and enter your teammate's email address.
+    4. Assign a role — **Admin**, **Editor**, or **Viewer** — and send the invitation.
+
+    Your teammate will receive an email prompting them to accept the invite and join your workspace.
+  </Step>
+
+  <Step title="Generate your first API key">
+    To authenticate requests to the NeoXZ API, you need an API key.
+
+    1. Go to **Settings** → **API Keys**.
+    2. Click **New API Key**.
+    3. Give the key a descriptive name (e.g., `Development` or `CI Pipeline`).
+    4. Copy the key immediately — it will not be shown again after you close the dialog.
+
+    Store your API key securely in a password manager or secrets vault.
+  </Step>
+
+  <Step title="Test your setup with a sample API call">
+    Confirm everything is working by making a quick test request. Replace `YOUR_API_KEY` with the key you just generated:
+
+    ```bash
+    curl -X GET https://api.neoxz.com/v1/resources \
+      -H "Authorization: Bearer YOUR_API_KEY" \
+      -H "Content-Type: application/json"
+    ```
+
+    A successful response returns a `200 OK` status and a JSON list of your workspace resources. If you receive a `401 Unauthorized` error, double-check that you copied your API key correctly.
+  </Step>
+</Steps>
+
+## Workspace Settings
+
+Once your workspace is live, take a moment to fine-tune the settings to match your team's preferences. Navigate to **Settings** → **General** to access the following options:
+
+| Setting | Description |
+|---|---|
+| **Display Name** | The name shown across the dashboard and in notifications. Update this any time to reflect a rebrand or project rename. |
+| **Timezone** | Sets the timezone used for scheduled events, log timestamps, and report generation. Choose the timezone where most of your team is located. |
+| **Notification Preferences** | Control which system events trigger email or in-app alerts. You can configure preferences globally here, or override them per team member under the **Team** tab. |
+
+Make sure your timezone is set correctly before you start scheduling any automated tasks — incorrect timezone settings are a common source of off-by-one errors in time-sensitive workflows.
+
+<Note>
+  Free plan workspaces include up to 3 team members, 5 API keys, and 10,000 API requests per month. Need more? [View the full pricing and plan details](https://neoxz.com/pricing) to find the right tier for your team.
+</Note>
