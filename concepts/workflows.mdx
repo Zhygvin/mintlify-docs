@@ -1,5 +1,5 @@
 ---
-title: "Common NeoXZ Workflows and Integration Patterns"
+title: "NeoXZ Workflows: Integration Patterns and Automation"
 sidebarTitle: "Workflows"
 description: "Explore the most common integration workflows in NeoXZ: managing resources, reacting to events, and automating actions with webhooks."
 ---
@@ -16,7 +16,7 @@ The most fundamental workflow is creating, reading, updating, and deleting resou
 
     ```bash
     curl --request POST \
-      --url https://api.neoxz.io/v1/resources \
+      --url https://api.neoxz.com/v1/resources \
       --header "Authorization: Bearer nxz_live_YOUR_API_KEY" \
       --header "Content-Type: application/json" \
       --data '{
@@ -34,7 +34,7 @@ The most fundamental workflow is creating, reading, updating, and deleting resou
 
     ```bash
     curl --request GET \
-      --url https://api.neoxz.io/v1/resources/res_01hxyz123abc \
+      --url https://api.neoxz.com/v1/resources/res_01hxyz123abc \
       --header "Authorization: Bearer nxz_live_YOUR_API_KEY"
     ```
   </Step>
@@ -43,7 +43,7 @@ The most fundamental workflow is creating, reading, updating, and deleting resou
 
     ```bash
     curl --request PATCH \
-      --url https://api.neoxz.io/v1/resources/res_01hxyz123abc \
+      --url https://api.neoxz.com/v1/resources/res_01hxyz123abc \
       --header "Authorization: Bearer nxz_live_YOUR_API_KEY" \
       --header "Content-Type: application/json" \
       --data '{
@@ -58,7 +58,7 @@ The most fundamental workflow is creating, reading, updating, and deleting resou
 
     ```bash
     curl --request DELETE \
-      --url https://api.neoxz.io/v1/resources/res_01hxyz123abc \
+      --url https://api.neoxz.com/v1/resources/res_01hxyz123abc \
       --header "Authorization: Bearer nxz_live_YOUR_API_KEY"
     ```
   </Step>
@@ -168,7 +168,7 @@ function handleResourceDeleted(resource) {
   console.log(`Resource deleted: ${resource.id}`);
 }
 
-app.listen(3000, () => console.log("Webhook handler listening on port 3000"));
+// Start your server on the port configured for your deployment environment.
 ```
 
 <Tip>

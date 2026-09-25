@@ -1,5 +1,5 @@
 ---
-title: "NeoXZ Platform Overview and Architecture"
+title: "NeoXZ Platform Overview: Core Concepts and Architecture"
 sidebarTitle: "Overview"
 description: "Understand how NeoXZ works: the platform's core components, request lifecycle, and the building blocks you use to integrate with your systems."
 ---
@@ -53,8 +53,8 @@ NeoXZ separates your work into two isolated environments: **development** and **
 
 | Environment | Purpose | Base URL |
 |---|---|---|
-| Development | Build and test integrations safely without affecting live data | `https://api.neoxz.io/v1/dev` |
-| Production | Serve real users and live workloads | `https://api.neoxz.io/v1` |
+| Development | Build and test integrations safely without affecting live data | `https://api.neoxz.com/v1/dev` |
+| Production | Serve real users and live workloads | `https://api.neoxz.com/v1` |
 
 To switch between environments, replace the API key you use in the `Authorization` header. Your development key starts with `nxz_dev_` and your production key starts with `nxz_live_`. All other request structures remain identical, so promoting an integration from development to production requires only a key swap.
 

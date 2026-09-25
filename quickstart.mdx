@@ -1,7 +1,7 @@
 ---
-title: "Get Started with NeoXZ in Minutes"
+title: "NeoXZ Quickstart: Your First API Call in Five Minutes"
 sidebarTitle: "Quickstart"
-description: "Create your NeoXZ account, obtain your API key, and make your first successful API call in under five minutes."
+description: "Follow this step-by-step guide to create your NeoXZ account, obtain your API key, and make your first successful authenticated API call in minutes."
 ---
 
 This guide walks you through everything you need to go from a blank slate to a working NeoXZ integration. By the end, you'll have a verified account, a live API key, and a successful API response in your terminal — a solid foundation to build everything else on.
@@ -23,7 +23,7 @@ This guide walks you through everything you need to go from a blank slate to a w
     With your API key in hand, run the following command in your terminal. Replace `YOUR_API_KEY` with the key you copied in the previous step.
 
     ```bash
-    curl -X GET https://api.neoxz.com/api/resources \
+    curl -X GET https://api.neoxz.com/v1/resources \
       -H "Authorization: Bearer YOUR_API_KEY" \
       -H "Content-Type: application/json"
     ```

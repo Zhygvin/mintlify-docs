@@ -1,5 +1,5 @@
 ---
-title: "NeoXZ REST API Reference Overview"
+title: "NeoXZ API Overview: Base URL, Versioning, and Formats"
 sidebarTitle: "Overview"
 description: "The NeoXZ REST API lets you manage resources, users, and webhooks programmatically. Learn the base URL, versioning, and response formats."
 ---
@@ -10,7 +10,7 @@ The NeoXZ REST API gives you full programmatic access to your workspace. Whether
 
 All API requests are made to the following base URL. Every endpoint documented in this reference is relative to it.
 
-```
+```text
 https://api.neoxz.com/v1
 ```
 
@@ -28,7 +28,7 @@ The current API version is **v1**, reflected in the base URL. NeoXZ is committed
 
 For all `POST` and `PUT` requests, send a JSON body and include the `Content-Type` header:
 
-```
+```text
 Content-Type: application/json
 ```
 
