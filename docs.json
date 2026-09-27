@@ -38,6 +38,22 @@
             ]
           },
           {
+            "group": "DSS Protocol",
+            "pages": [
+              "dss/overview",
+              "dss/architecture",
+              "dss/device-trust-bond",
+              "dss/handshake-protocol",
+              "dss/vector-device",
+              "dss/vector-contact",
+              "dss/vector-location",
+              "dss/trust-score",
+              "dss/multi-device-recovery",
+              "dss/energy-efficiency",
+              "dss/claims"
+            ]
+          },
+          {
             "group": "Help",
             "pages": [
               "help/faq",

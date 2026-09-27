@@ -1,0 +1,54 @@
+---
+title: "DSS: Continuous Authentication via Reality-Anchored Handshakes"
+sidebarTitle: "Overview"
+description: "Discrete Sovereign Settlement (DSS) replaces interactive login with continuous background validation of device, contact, and location vectors."
+---
+
+Discrete Sovereign Settlement (DSS) is NEOXZ's continuous authentication protocol. It eliminates passwords, OTPs, and seed phrases by binding a user to a hardware Secure Enclave and continuously validating three independent reality-anchored vectors: device identity, social graph context, and geographic location.
+
+## What DSS Solves
+
+Interactive authentication (passwords, OTPs, seed phrases) creates an "Interceptable Window" during which credentials can be phished, SIM-swapped, or lost. It also imposes a large ongoing energy cost through global SMS gateways, email verification servers, and retry cycles caused by human error.
+
+DSS removes user-visible credentials entirely and replaces "validate once at login" with lightweight cryptographic handshakes that fire every 3 seconds during an active session.
+
+<CardGroup cols={2}>
+  <Card title="Architecture" icon="layers" href="/dss/architecture">
+    Devices, gateway, ledger, and the crypto primitives that tie them together.
+  </Card>
+
+  <Card title="Handshake Protocol" icon="rocket" href="/dss/handshake-protocol">
+    Payload shape, ECDSA signing, and gateway validation on a 3-second cadence.
+  </Card>
+
+  <Card title="Triangulation Vectors" icon="puzzle" href="/dss/vector-device">
+    Device, contact, and location scoring that combine into one trust decision.
+  </Card>
+
+  <Card title="Trust Score" icon="sparkle" href="/dss/trust-score">
+    Weighted composite score, risk-based thresholds, and step-up authentication.
+  </Card>
+</CardGroup>
+
+## Core Properties
+
+- **No interactive credentials.** Users never enter a password, OTP, or seed phrase after initial biometric enrollment.
+- **Continuous validation.** A signed handshake fires every 3 seconds during active sessions instead of trusting a session token after login.
+- **Three independent vectors.** Device authenticity, contact/social graph, and location must all be consistent with the enrolled user's reality.
+- **Composite trust score.** Access permissions adjust dynamically from a weighted score: `Device × 0.40 + Contact × 0.30 + Location × 0.30`.
+- **Seed-phrase-free recovery.** Cryptocurrency keys are split via 3-of-5 Shamir Secret Sharing across trusted contacts, a recovery key, and an identity verification service.
+- **Energy efficient.** Roughly 92.1% reduction in authentication-related energy compared with traditional password + OTP infrastructure at equivalent security.
+
+## Attack Surface
+
+To compromise a DSS-protected account, an attacker must simultaneously:
+
+1. Physically possess or perfectly clone the user's device including its Secure Enclave hardware.
+2. Replicate the user's entire social graph and communication patterns across all contacts.
+3. Be in the same geographic location as the user, or spoof GPS while defeating device attestation.
+
+This combination is effectively unachievable, making DSS roughly 25 million times more expensive to attack than a traditional password + OTP system.
+
+## Attribution
+
+Invention: _Continuous Authentication via Triangulated Reality-Anchored Background Handshakes._ Inventor: Neil Rubio Balog. Applicant: NEOXZ Engineering Inc.

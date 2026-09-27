@@ -1,0 +1,65 @@
+---
+title: "Composite Trust Score and Access Decisioning"
+sidebarTitle: "Trust Score"
+description: "Weighted trust score formula, risk-based thresholds, dynamic adjustment, and step-up authentication used to gate operations in DSS."
+---
+
+The authentication gateway computes a composite trust score by combining the three independent verification vectors. Access permissions adjust dynamically based on this score, applying different thresholds per operation risk level.
+
+## Formula
+
+```text Composite trust score
+CompositeScore = (DeviceScore × 0.40) + (ContactScore × 0.30) + (LocationScore × 0.30)
+```
+
+### Weighting Rationale
+
+- **Device (40%).** Strongest cryptographic guarantee: Secure Enclave keys are effectively unextractable.
+- **Contact (30%).** Social graph replication requires extensive surveillance and real-world relationship knowledge.
+- **Location (30%).** Enforces physical reality constraints that cannot be violated by purely technical attacks.
+
+## Risk-Based Decision Thresholds
+
+| Risk level | Example operations | Required score |
+| --- | --- | --- |
+| Low | Read data, view content | ≥ 0.50 |
+| Medium | Post content, moderate transactions | ≥ 0.75 |
+| High | Large transfers, account changes, device management | ≥ 0.90 |
+| Critical | Cryptocurrency transfers, account deletion | ≥ 0.95 + trusted contact approval |
+
+## Dynamic Threshold Adjustment
+
+Thresholds adjust based on historical behavior:
+
+- **Established user** (6+ months of consistent behavior, average score `0.92`): low-risk threshold relaxed to `0.45`; high-risk thresholds unchanged.
+- **New user or device** (first 14 days): elevated thresholds — `0.85` for medium-risk, `0.95` for high-risk.
+
+## Step-Up Authentication
+
+When the composite score falls between thresholds (for example `0.60` on an operation requiring `0.75`), DSS triggers step-up authentication:
+
+<Steps>
+  <Step title="Fresh biometric">
+    Fresh biometric scan required within 30 seconds.
+  </Step>
+  <Step title="One-time code (optional)">
+    A verification code is sent to registered email/phone. Used only for step-up, never for regular authentication.
+  </Step>
+  <Step title="Trusted contact approval (critical operations)">
+    For critical operations, DSS sends approval requests to the user's designated [trusted contacts](/dss/vector-contact#trusted-contact-verification).
+  </Step>
+</Steps>
+
+## Graceful Degradation
+
+When one vector is temporarily unavailable (e.g., GPS lost indoors, no contact activity during solo work), DSS continues with the remaining vectors and adjusted weighting:
+
+- **Location unavailable:**
+  ```text
+  CompositeScore = (DeviceScore × 0.60) + (ContactScore × 0.40)
+  ```
+- **Contact and location both unavailable:** device score must be `1.0` for authentication to succeed; high-risk operations are blocked until additional vectors restore.
+
+<Note>
+  Degradation never lifts the impossible-travel or mock-location hard-fail conditions. Those set the [location score](/dss/vector-location) to `0.0` and can never be bypassed by a fallback weighting.
+</Note>

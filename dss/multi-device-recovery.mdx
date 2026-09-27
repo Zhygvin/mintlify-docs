@@ -1,0 +1,92 @@
+---
+title: "Multi-Device Support, Recovery, and Seed-Phrase-Free Wallets"
+sidebarTitle: "Multi-Device & Recovery"
+description: "Trusted device mesh, three recovery mechanisms, and 3-of-5 Shamir Secret Sharing that eliminates cryptocurrency seed phrases."
+---
+
+DSS supports multiple registered devices per user through a trusted device mesh and provides three recovery paths when all devices are lost. For cryptocurrency, threshold cryptography eliminates seed phrases entirely.
+
+## Adding a Device
+
+<Steps>
+  <Step title="Initiate on existing device">
+    User initiates "Add Device" on an already-authenticated Device A while physically possessing new Device B.
+  </Step>
+  <Step title="Generate keys on new device">
+    Device B generates its own Secure Enclave key pair and hardware attestation following the standard [enrollment protocol](/dss/device-trust-bond).
+  </Step>
+  <Step title="Pair via QR or code">
+    Device B displays a QR code or pairing code containing the new device public key, device identifier, and attestation hash.
+  </Step>
+  <Step title="Approve with biometric">
+    User scans the QR code with Device A or enters the pairing code, then confirms with biometrics.
+  </Step>
+  <Step title="Sign approval message">
+    Device A signs an approval message (existing device signature, new device public key, new device identifier, timestamp, authorization scope) and transmits it to the gateway.
+  </Step>
+  <Step title="Record new trust bond">
+    Gateway validates both attestations and records the new device trust bond in the distributed ledger. Device B is now authorized for background handshakes.
+  </Step>
+</Steps>
+
+## Device Loss Recovery
+
+If a user still has any registered device, recovery is automatic. If all devices are lost, DSS supports three recovery mechanisms.
+
+### Mechanism 1: Trusted Contact Verification
+
+DSS contacts the user's 3-5 designated trusted contacts:
+
+> "User X claims to have lost all devices and is attempting to register a new device. Please confirm this is User X requesting recovery."
+
+Contacts see a photo of the person at the new device (if camera available) and approve or deny. On 3 of 5 approvals (threshold configurable), the new device is registered with a **48-hour monitoring period** during which high-risk operations are blocked.
+
+### Mechanism 2: Recovery Key
+
+At initial registration, DSS generates a 256-bit recovery key, displayed once with strong "save this securely" warnings. The key is encrypted with the user's government ID biometric hash and stored in the ledger.
+
+To recover, the user provides:
+
+- The recovery key.
+- A photo of a government-issued ID (passport, driver's license).
+- A fresh biometric scan.
+
+The gateway validates the recovery key, performs facial recognition between the ID photo and biometric, verifies ID validity, and registers the new device with a 48-hour monitoring period.
+
+### Mechanism 3: Identity Verification Service
+
+Last resort. Requires:
+
+- Government-issued photo ID.
+- Live video interview with knowledge-based authentication questions.
+- Fresh biometric scan.
+- Optional physical mail verification to the registered address.
+
+New device is registered with a **7-day monitoring period** and elevated step-up authentication requirements.
+
+## Cryptocurrency Wallet Recovery
+
+For cryptocurrency wallets on DSS, the same mechanisms provide seed-phrase-free recovery via threshold cryptography.
+
+<Steps>
+  <Step title="Split the master key">
+    During setup, the master private key is split into 5 shares using **Shamir Secret Sharing**, with 3 required to reconstruct.
+  </Step>
+  <Step title="Distribute shares">
+    Shares are distributed as follows:
+
+    - 1 share to each of 3 trusted contacts, encrypted with their public keys.
+    - 1 share encrypted with the recovery key.
+    - 1 share encrypted with the identity verification service.
+  </Step>
+  <Step title="Reconstruct on device loss">
+    Recovery obtains any 3 of 5 shares (trusted contact release, recovery key decryption, or identity verification service release) and reconstructs the master private key.
+  </Step>
+  <Step title="Rebind and rotate">
+    The reconstructed key is re-encrypted in the new device's Secure Enclave. Old shares are invalidated and new shares are generated and redistributed.
+  </Step>
+</Steps>
+
+<Note>
+  This eliminates the 23% wallet loss rate of traditional seed phrase systems while preserving cryptographic security equivalent to cold storage.
+</Note>

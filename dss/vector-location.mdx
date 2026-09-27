@@ -1,0 +1,88 @@
+---
+title: "Triangulation Vector 3: Location and Movement Validation"
+sidebarTitle: "Location Vector"
+description: "How DSS enforces physical reality through GPS, geofencing, impossible-travel detection, and mock-location prevention."
+---
+
+The location validation vector analyzes geographic positioning and movement patterns to detect impossible travel, unusual locations, and spoofing. It enforces physical constraints that cannot be violated even by a perfect technical attack. It contributes 30% of the composite trust score.
+
+## Location Baseline
+
+During initial registration and the first 30 days, DSS builds a location baseline covering:
+
+- Frequently visited locations (`home`, `work`, `gym`) clustered from GPS points where the user spends 30+ minutes regularly.
+- Typical movement patterns (commute routes, weekend activity areas).
+- Travel velocity profiles (walking 2-5 km/h, driving 30-100 km/h, transit patterns).
+- Geofencing boundaries (50-200 m radius) around known locations.
+- Impossible travel thresholds (e.g., 500 km in 30 minutes without air travel).
+
+## Real-Time Location Context
+
+Each handshake includes:
+
+- Current GPS coordinates (latitude/longitude, ±50 m accuracy).
+- Altitude (multi-floor or air travel detection).
+- GPS accuracy estimate.
+- Movement speed and bearing (from last 5-10 samples).
+- Network location indicators (hashed WiFi BSSIDs, cell tower IDs, never raw).
+- Device motion data (accelerometer patterns for walking, driving, stationary).
+
+## Validation Mechanisms
+
+<AccordionGroup>
+  <Accordion title="Known location matching">
+    +0.2 boost when inside a known geofence; -0.3 penalty at completely unknown locations with no travel pattern leading to them.
+  </Accordion>
+
+  <Accordion title="Impossible travel detection">
+    Compute minimum travel time between consecutive handshakes assuming the fastest reasonable transport (car: 130 km/h, train: 200 km/h, plane: 800 km/h). If calculated travel time \< actual elapsed time, set the location score to `0.0`.
+  </Accordion>
+
+  <Accordion title="Velocity consistency">
+    Sudden jump from driving-speed (60 km/h) to flight-speed (800 km/h) without passing through an airport geofence is flagged as impossible.
+  </Accordion>
+
+  <Accordion title="Mock location detection">
+    Device attestation verifies mock location services are disabled. If mock location is detected, location score is set to `0.0`.
+  </Accordion>
+
+  <Accordion title="Altitude validation">
+    Sudden appearance at 10,000 m altitude with no flight pattern is flagged as spoofing.
+  </Accordion>
+</AccordionGroup>
+
+## Travel Mode Recognition
+
+DSS recognizes legitimate travel through pattern analysis:
+
+- **Airport detection.** When the device enters a known airport geofence for 30+ minutes, DSS enters "flight mode" expecting a large location jump.
+- **Train station detection.** Same pattern for high-speed rail stations.
+- **Gradual movement.** Continuous updates showing logical route progression validate legitimacy.
+- **International travel.** Border crossings may prompt fresh biometric confirmation, but are not flagged as anomalies if the travel pattern is logical.
+
+## Privacy-Preserving Processing
+
+Raw GPS coordinates are never stored permanently. DSS retains only:
+
+- Geofence identifiers (`home-geofence`, `work-geofence`).
+- Hashed location clusters.
+- Movement pattern metadata.
+- Impossible travel detection results.
+
+Handshake location data is retained only for the impossible-travel validation window (last 10 handshakes, ~30 seconds) and then discarded.
+
+## Scoring
+
+The final location score is:
+
+```text Location score
+min(travel_possibility, mock_location_check) × avg(gps_quality, known_location_bonus, pattern_consistency)
+```
+
+Impossible travel or mock-location detection immediately fails authentication regardless of the other factors.
+
+- **GPS quality:** `1.0` if \< 50 m accuracy, `0.8` if \< 100 m, `0.5` if \< 200 m, `0.2` if > 200 m.
+- **Known location bonus:** `1.0` at home/work, `0.9` other known, `0.7` familiar area, `0.5` unknown.
+- **Travel impossibility:** `1.0` all possible, `0.0` any impossibility detected.
+- **Mock location:** `1.0` verified genuine, `0.0` mock detected.
+- **Pattern consistency:** `1.0` if movements match established patterns, reduced by anomaly penalties.

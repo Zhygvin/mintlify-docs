@@ -1,0 +1,59 @@
+---
+title: "Triangulation Vector 2: Contact and Social Graph Validation"
+sidebarTitle: "Contact Vector"
+description: "How DSS validates the user's real-world social graph and communication patterns to detect account compromise or unauthorized access."
+---
+
+The contact validation vector analyzes the user's social graph and communication patterns to detect anomalies indicating compromise. It leverages the insight that an attacker cannot replicate the user's real-world relationships and communication behaviors even after gaining device access. It contributes 30% of the composite trust score.
+
+## Social Graph Baseline
+
+During initial registration and the first 30 days of use, DSS builds a baseline covering:
+
+- Contact list from the device address book (names, phone numbers, email addresses).
+- Communication frequency with each contact (messages sent/received per week).
+- Timing patterns (typical hours, weekday vs. weekend).
+- Channels used (SMS, email, social platforms).
+- Bidirectional relationship validation (contacts who also list the user).
+- Contact proximity patterns (Bluetooth proximity, shared location check-ins).
+
+## Real-Time Pattern Context
+
+Each handshake carries compressed communication context from the preceding interval (3 seconds to 1 hour depending on activity):
+
+- Contact identifiers (hashed for privacy) of recent communication.
+- Message counts sent/received.
+- Communication timestamps.
+- Channels used.
+- Bluetooth proximity events indicating physical presence near known contacts.
+
+## Anomaly Detection
+
+| Anomaly | Trigger | Score Penalty |
+| --- | --- | --- |
+| No communication anomaly | Zero outgoing communication for 4+ hours while device is active, for a user who typically messages 5-10 contacts daily | -0.3 |
+| Unknown contact surge | 70%+ of recent communication is with contacts not in baseline | -0.5 |
+| Temporal pattern violation | Communication at unusual hours (e.g., 3 AM for a user who never messages between 2-6 AM) | -0.2 |
+| Channel inconsistency | Sudden switch of primary channel (e.g., SMS-only user now email-only) | -0.3 |
+| Proximity absence | Zero Bluetooth proximity to expected known contacts during typical shared hours | -0.2 |
+
+## Trusted Contact Verification
+
+For high-risk operations, DSS can invoke trusted contact verification. During setup, the user designates 3-5 trusted contacts. For verification, the system sends a one-tap approval request:
+
+> "User X is attempting to transfer \$50,000 to unknown recipient. Approve?"
+
+This prevents insider threats and provides social recovery without seed phrases.
+
+## Scoring
+
+The contact validation score combines:
+
+- **Communication recency:** `1.0` if messages in last hour, `0.8` if last 4 hours, `0.6` if last 24 hours, `0.3` if 1+ days.
+- **Pattern consistency:** `1.0` if normal, reduced by the anomaly penalties above.
+- **Social graph familiarity:** `1.0` if 90%+ of communication is with known contacts, `0.5` at 50%, `0.0` below 25%.
+- **Proximity verification:** `1.0` if expected proximity matches reality, `0.7` neutral, `0.3` contradictory.
+
+<Note>
+  For sessions with zero social activity but normal device and location scores, the contact score defaults to `0.6` (neutral rather than penalizing solo work).
+</Note>

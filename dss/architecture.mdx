@@ -1,0 +1,69 @@
+---
+title: "DSS System Architecture and Cryptography"
+sidebarTitle: "Architecture"
+description: "The four DSS components, transport security, and elliptic-curve primitives that back device trust bonds and background handshakes."
+---
+
+The DSS system comprises four primary components tied together by mutually authenticated TLS and elliptic-curve cryptography. This page describes each component and the crypto primitives used throughout the protocol.
+
+## Components
+
+<CardGroup cols={2}>
+  <Card title="User Device" icon="lightbulb">
+    Equipped with a hardware Secure Enclave (iOS Secure Enclave, Android Trusted Execution Environment) and biometric sensors. Generates and stores non-exportable private keys and produces signed handshake payloads.
+  </Card>
+
+  <Card title="Application Server" icon="globe">
+    Hosts user-facing services. Receives authorization decisions from the authentication gateway based on the current composite trust score.
+  </Card>
+
+  <Card title="Authentication Gateway" icon="gear">
+    Validates background handshakes: verifies signatures, computes per-vector scores, calculates the composite trust score, and returns access decisions.
+  </Card>
+
+  <Card title="Distributed Ledger" icon="book">
+    Maintains immutable records of device trust bonds, authentication events, and recovery share distributions.
+  </Card>
+</CardGroup>
+
+## Transport Security
+
+- All component-to-component communication occurs over **mutual TLS 1.3 with certificate pinning**.
+- Handshake payloads are signed inside the Secure Enclave before transmission, so tampering is detectable regardless of transport.
+
+## Cryptographic Primitives
+
+- **General authentication:** ECDSA over the NIST P-256 curve.
+- **Cryptocurrency applications:** ECDSA over secp256k1 for wallet compatibility.
+- **Key strength:** 128-bit security equivalent or greater across all operations.
+- **Hashing:** SHA-256 over the canonical handshake payload prior to signing.
+- **Randomness:** Handshake nonces are 128-bit values from the device hardware RNG, single-use.
+
+## Trust Bond Ledger Entry
+
+Every registered device is recorded in the distributed ledger as an immutable association:
+
+```text Device trust bond
+UserID ↔ DeviceID ↔ Device Public Key ↔ Registration Timestamp ↔ Device Attestation Hash
+```
+
+The gateway caches the public key from this entry so handshake signature verification does not require a ledger read on the 3-second cadence.
+
+## Data Flow at a Glance
+
+<Steps>
+  <Step title="Enrollment">
+    Device generates a Secure Enclave key pair, produces a hardware attestation, and registers with the gateway. The ledger records the trust bond.
+  </Step>
+  <Step title="Session start">
+    User unlocks with biometrics; the Secure Enclave releases the private key for signing.
+  </Step>
+  <Step title="Continuous handshake">
+    Every 3 seconds the device sends a signed payload containing device, contact, and location context.
+  </Step>
+  <Step title="Trust decision">
+    Gateway validates the signature, scores each vector, computes the composite trust score, and returns an authorization decision to the application server.
+  </Step>
+</Steps>
+
+Continue to the [Device Trust Bond](/dss/device-trust-bond) section for the enrollment procedure in detail.

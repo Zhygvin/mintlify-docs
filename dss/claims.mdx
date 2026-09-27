@@ -1,0 +1,85 @@
+---
+title: "DSS Patent Claims and Reference Specification"
+sidebarTitle: "Patent Claims"
+description: "Verbatim reference of the 18 claims from the NEOXZ Engineering DSS continuous authentication patent application."
+---
+
+The following claims are reproduced from the NEOXZ Engineering patent application _Continuous Authentication via Triangulated Reality-Anchored Background Handshakes_ (Inventor: Neil Rubio Balog). This page is the authoritative claim reference for engineering and compliance work.
+
+## Method Claims
+
+<Accordion title="Claim 1 — Continuous authentication method">
+  A computer-implemented method for continuous authentication comprising: establishing a device trust bond between a user device and an authentication gateway by generating a cryptographic key pair within a hardware Secure Enclave of the user device, wherein a private key of the key pair is stored in the Secure Enclave and marked as non-exportable, and a public key of the key pair is transmitted to the authentication gateway; binding access to the private key to a biometric authentication mechanism such that the private key can only be accessed when a valid biometric is presented; registering the device trust bond by recording in a distributed ledger an association between a user identifier, a device identifier, the public key, and a registration timestamp; during an active user session, executing background handshake validations at predetermined intervals without requiring explicit user interaction; for each background handshake validation: constructing a handshake payload comprising a timestamp, a cryptographic nonce, the device identifier, contact context data, and location context data; generating a cryptographic signature of the handshake payload using the private key stored in the Secure Enclave; transmitting the signed handshake payload to the authentication gateway; validating at the authentication gateway: device authenticity by verifying the cryptographic signature using the public key, contact validation by analyzing communication patterns with known contacts against a baseline social graph, and location validation by analyzing geographic positioning and movement patterns; computing a composite trust score by combining weighted scores from the device authenticity validation, contact validation, and location validation; and dynamically adjusting access permissions based on the composite trust score.
+</Accordion>
+
+<Accordion title="Claim 2 — 3-second handshake interval">
+  The method of claim 1, wherein the predetermined interval for background handshake validations is approximately 3 seconds during active sessions.
+</Accordion>
+
+<Accordion title="Claim 3 — 40/30/30 weighting">
+  The method of claim 1, wherein computing the composite trust score comprises weighting the device authenticity score at 40%, the contact validation score at 30%, and the location validation score at 30%.
+</Accordion>
+
+<Accordion title="Claim 4 — Contact validation">
+  The method of claim 1, wherein the contact validation comprises: establishing a baseline social graph during an initial period comprising contact identifiers, communication frequencies, and communication timing patterns; for each background handshake, comparing recent communication patterns against the baseline social graph; and detecting anomalies including absence of communication with known contacts, surge in communication with unknown contacts, temporal pattern violations, and proximity absence of known contacts.
+</Accordion>
+
+<Accordion title="Claim 5 — Location validation">
+  The method of claim 1, wherein the location validation comprises: establishing a location baseline comprising frequently visited locations, typical movement patterns, and travel velocity profiles; for each background handshake, validating current location context against the location baseline; detecting impossible travel by calculating whether geographic distance between consecutive handshakes exceeds maximum possible travel distance given elapsed time and fastest reasonable transport; and detecting location spoofing through device attestation confirming mock location services are disabled.
+</Accordion>
+
+<Accordion title="Claim 6 — Risk-based thresholds">
+  The method of claim 1, wherein dynamically adjusting access permissions comprises: applying different composite trust score thresholds based on operation risk level; allowing low-risk operations when composite trust score exceeds 0.50; requiring composite trust score above 0.75 for medium-risk operations; requiring composite trust score above 0.90 for high-risk operations; and triggering step-up authentication when composite trust score falls below required threshold for requested operation.
+</Accordion>
+
+<Accordion title="Claim 7 — Step-up authentication">
+  The method of claim 6, wherein step-up authentication comprises requesting fresh biometric scan, sending verification code to registered contact information, or requesting approval from designated trusted contacts.
+</Accordion>
+
+<Accordion title="Claim 8 — Multi-device support">
+  The method of claim 1, further comprising multi-device support by: initiating device addition from an already-authenticated first device; generating a new cryptographic key pair in a Secure Enclave of a second device; transferring device approval credentials from the first device to the second device; validating device approval at the authentication gateway by verifying a signature from the first device authorizing the second device; and recording a second device trust bond in the distributed ledger associating the second device with the same user identifier.
+</Accordion>
+
+<Accordion title="Claim 9 — Device loss recovery">
+  The method of claim 1, further comprising device recovery when all registered devices are lost by: receiving identity verification from designated trusted contacts; validating a recovery key against encrypted storage in the distributed ledger; performing facial recognition comparison between government-issued identification and live biometric scan; and upon successful verification, registering a new device trust bond with a monitoring period during which high-risk operations are restricted.
+</Accordion>
+
+<Accordion title="Claim 10 — Seed-phrase-free cryptocurrency wallets">
+  A computer-implemented method for eliminating seed phrases in cryptocurrency wallet systems comprising: generating a cryptocurrency private key within a hardware Secure Enclave of a user device; binding access to the cryptocurrency private key to a biometric authentication mechanism; splitting the cryptocurrency private key into a plurality of shares using threshold secret sharing, wherein a predetermined threshold number of shares are required to reconstruct the private key; distributing encrypted shares to: a plurality of designated trusted contacts, encrypted with respective public keys of the trusted contacts; encrypted storage using a recovery key; and encrypted storage with an identity verification service; upon device loss, reconstructing the cryptocurrency private key by: obtaining the predetermined threshold number of shares through at least one of: trusted contact release, recovery key decryption, or identity verification service release; combining the obtained shares to reconstruct the cryptocurrency private key; storing the reconstructed cryptocurrency private key in a Secure Enclave of a new device; invalidating the distributed shares; and generating new shares for future recovery.
+</Accordion>
+
+<Accordion title="Claim 11 — 3-of-5 threshold">
+  The method of claim 10, wherein the predetermined threshold number of shares is 3 out of 5 total shares.
+</Accordion>
+
+<Accordion title="Claim 12 — Biometric-bound wallet keys">
+  The method of claim 10, wherein binding access to the cryptocurrency private key to biometric authentication eliminates need for user to record or memorize seed phrase recovery words.
+</Accordion>
+
+## System Claims
+
+<Accordion title="Claim 13 — Continuous authentication system">
+  A system for continuous authentication comprising: a user device comprising: a hardware Secure Enclave configured to generate and store a non-exportable cryptographic private key; a biometric sensor configured to capture biometric authentication data; a processor configured to: generate background handshake payloads at predetermined intervals, the payloads comprising timestamp, nonce, device identifier, contact context, and location context; sign the handshake payloads using the private key stored in the Secure Enclave; transmit signed handshake payloads to an authentication gateway; an authentication gateway comprising: a validation processor configured to: verify cryptographic signatures using a public key associated with the device; compute a device authenticity score based on signature validity and device attestation; compute a contact validation score based on comparison of communication patterns against a baseline social graph; compute a location validation score based on geographic positioning validation and impossible travel detection; calculate a composite trust score as a weighted combination of the device authenticity score, contact validation score, and location validation score; a decision engine configured to dynamically adjust access permissions based on the composite trust score relative to operation-specific risk thresholds; a distributed ledger configured to maintain immutable records of device trust bonds, authentication events, and recovery share distributions.
+</Accordion>
+
+<Accordion title="Claim 14 — Per-handshake energy">
+  The system of claim 13, wherein each background handshake consumes approximately 0.00018 kilowatt-hours of energy including device signature generation, network transmission, gateway validation, and cache updates.
+</Accordion>
+
+<Accordion title="Claim 15 — Impossible travel detection">
+  The system of claim 13, wherein the validation processor is further configured to detect impossible travel by: retrieving geographic coordinates from a previous handshake occurring at a previous time; calculating great-circle distance between the previous geographic coordinates and current geographic coordinates; calculating maximum possible travel distance as product of elapsed time since previous handshake and maximum reasonable transport velocity; and setting location validation score to zero when calculated great-circle distance exceeds maximum possible travel distance.
+</Accordion>
+
+<Accordion title="Claim 16 — Contact validation scoring">
+  The system of claim 13, wherein the contact validation score computation comprises: identifying recent communications from contact context data in the handshake payload; comparing identified recent communications against a baseline comprising expected contact frequencies and timing patterns; reducing the contact validation score when recent communications deviate from expected patterns by more than a predetermined threshold; and increasing the contact validation score when recent communications match expected patterns within tolerance bounds.
+</Accordion>
+
+<Accordion title="Claim 17 — Energy monitoring">
+  The system of claim 13, further comprising an energy monitoring component configured to: measure energy consumption per background handshake; compare measured energy consumption against traditional authentication energy consumption for equivalent security validation frequency; and report energy savings metrics comprising total kilowatt-hours saved and percentage reduction relative to traditional systems.
+</Accordion>
+
+## Storage Medium Claim
+
+<Accordion title="Claim 18 — Non-transitory computer-readable storage">
+  A non-transitory computer-readable storage medium storing instructions that, when executed by a processor, cause the processor to perform a method for continuous authentication comprising: establishing device trust through hardware-bound cryptographic key generation in a Secure Enclave; executing periodic background handshakes comprising device signature generation, contact pattern validation, and location context validation; computing composite trust scores through weighted combination of three independent verification vectors; and dynamically controlling access based on composite trust scores relative to operation-specific risk thresholds, wherein the method eliminates interactive user authentication and reduces authentication energy consumption by at least 90% compared to traditional password and one-time password systems.
+</Accordion>

@@ -1,0 +1,57 @@
+---
+title: "Device Trust Bond Establishment in DSS"
+sidebarTitle: "Device Trust Bond"
+description: "Five-step enrollment that creates a hardware-bound trust bond between a device, a user identity, and the authentication gateway."
+---
+
+Initial device registration creates a permanent trust bond between the device's Secure Enclave, the user identity, and the authentication gateway. After enrollment, the device is authorized to run background handshakes; no interactive authentication (password entry, OTP verification) is required for subsequent access.
+
+## Enrollment Procedure
+
+<Steps>
+  <Step title="Generate a hardware-bound key pair">
+    The device generates an ECDSA key pair inside its Secure Enclave using a hardware random number generator. The private key is stored in the Secure Enclave and marked as non-exportable through hardware enforcement. The public key is extracted for transmission to the gateway.
+  </Step>
+  <Step title="Produce a hardware attestation proof">
+    The device produces an attestation demonstrating that (a) the key pair was generated inside a genuine Secure Enclave, (b) the operating system has not been jailbroken or rooted, and (c) the private key cannot be extracted even by privileged software.
+
+    - **iOS:** Apple DeviceCheck framework.
+    - **Android:** SafetyNet Attestation API or Play Integrity API.
+  </Step>
+  <Step title="Collect initial credentials and biometric">
+    The user provides initial credentials (username/password or an existing authentication method) and enrolls a biometric (Face ID, Touch ID, or equivalent). Biometric data is stored locally and bound to the Secure Enclave key so the private key is only accessible when a valid biometric is presented.
+  </Step>
+  <Step title="Transmit registration payload">
+    The device signs and transmits to the gateway:
+
+    - Device public key
+    - Hardware attestation proof
+    - Unique device identifier
+    - Hash of the enrolled biometric (never the biometric itself)
+    - Initial user credentials
+
+    The transmission is signed with the device private key to prove possession.
+  </Step>
+  <Step title="Record the trust bond">
+    The gateway validates the attestation, verifies user credentials against existing identity systems, confirms the signature, and writes the trust bond to the distributed ledger:
+
+    ```text Ledger entry
+    UserID ↔ DeviceID ↔ Device Public Key ↔ Registration Timestamp ↔ Device Attestation Hash
+    ```
+  </Step>
+</Steps>
+
+## Post-Enrollment State
+
+<Note>
+  Once enrolled, the device is authorized to perform continuous [background handshakes](/dss/handshake-protocol). All subsequent authentication runs through the handshake protocol; no passwords, OTP codes, or seed phrases are ever entered again.
+</Note>
+
+## Biometric Binding
+
+The private key is gated by a valid biometric presentation. This produces two important guarantees:
+
+- The device alone cannot sign a handshake without a live biometric release.
+- A stolen device cannot be used to impersonate the user, even by an attacker with root on the device.
+
+Biometric recency is later factored into the [device authentication score](/dss/vector-device).

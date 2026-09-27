@@ -1,0 +1,71 @@
+---
+title: "Background Handshake Protocol Specification"
+sidebarTitle: "Handshake Protocol"
+description: "Payload format, cryptographic signing, gateway validation, and energy characteristics of the 3-second DSS background handshake."
+---
+
+During an active session, the device executes background handshakes at a predetermined interval (default: every 3 seconds). Each handshake independently re-validates the three triangulation vectors and produces a fresh authentication result.
+
+## Handshake Payload
+
+Every payload includes:
+
+| Field | Description |
+| --- | --- |
+| `timestamp` | ISO 8601 with millisecond precision |
+| `nonce` | 128-bit random value, single-use |
+| `device_id` | Registered device identifier |
+| `session_id` | Current session identifier |
+| `activity_hash` | Hash of recent app events and screen interactions |
+| `contact_context` | Compressed communication context (see [Contact Vector](/dss/vector-contact)) |
+| `location_context` | Compressed geographic context (see [Location Vector](/dss/vector-location)) |
+
+Payload size is 200-300 bytes uncompressed, 80-150 bytes compressed.
+
+## Cryptographic Signing
+
+The device computes a SHA-256 hash of the payload and signs the hash with its Secure Enclave private key (ECDSA). The signature proves:
+
+- The handshake originated from the specific registered device.
+- The payload has not been tampered with in transit.
+- The device still possesses the private key, implying physical possession.
+
+## Transmission
+
+The signed payload is sent to the authentication gateway over the existing TLS 1.3 mutually-authenticated channel with certificate pinning. Network transmission consumes approximately `0.00008 kWh` per handshake including routing overhead.
+
+## Gateway Validation
+
+<Steps>
+  <Step title="Freshness check">
+    Reject if the timestamp is more than 10 seconds old (replay protection).
+  </Step>
+  <Step title="Nonce uniqueness">
+    Confirm the nonce has never been used before for this device.
+  </Step>
+  <Step title="Signature verification">
+    Retrieve the cached device public key and verify the ECDSA signature.
+  </Step>
+  <Step title="Vector scoring">
+    Extract and score device, contact, and location vectors independently.
+  </Step>
+  <Step title="Composite decision">
+    Compute the [composite trust score](/dss/trust-score) and return an authentication result.
+  </Step>
+</Steps>
+
+## Energy Budget
+
+| Stage | Energy |
+| --- | --- |
+| Device signature generation | 0.00003 kWh |
+| Network transmission | 0.00008 kWh |
+| Gateway validation | 0.00005 kWh |
+| Cache update | 0.00002 kWh |
+| **Total per handshake** | **0.00018 kWh** |
+
+For a 24-minute active session (480 handshakes), total energy consumption is `0.0864 kWh`, versus `0.684 kWh` for equivalent-security traditional continuous validation. See [Energy Efficiency](/dss/energy-efficiency) for global impact.
+
+<Tip>
+  The 3-second cadence is the default; deployments can tune it up or down. Increasing the interval reduces energy proportionally but widens the window before an anomalous vector reduces access.
+</Tip>
