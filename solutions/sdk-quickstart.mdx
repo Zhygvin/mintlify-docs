@@ -1,0 +1,264 @@
+---
+title: "DSS SDK Quickstart: Replace Auth0 in a Weekend"
+sidebarTitle: "SDK Quickstart"
+description: "Install the NEOXZ DSS SDK, enroll a device, and run your first continuous handshake in under 10 minutes. Code examples in TypeScript, Python, and Swift."
+---
+
+Get a working DSS integration in under 10 minutes. This quickstart walks you through installing the SDK, enrolling a device, and verifying continuous handshakes against the sandbox gateway.
+
+## Prerequisites
+
+- A NEOXZ account on the [Developer tier](/solutions/pricing) (free, 1,000 MAU)
+- A sandbox API key from your dashboard
+- A device with hardware Secure Enclave (TPM 2.0, Apple Secure Enclave, Android StrongBox, or equivalent)
+- Node 20+, Python 3.11+, or Xcode 15+ depending on your platform
+
+## 1. Install the SDK
+
+<CodeGroup>
+
+```bash npm
+npm install @neoxz/dss-sdk
+```
+
+```bash yarn
+yarn add @neoxz/dss-sdk
+```
+
+```bash pnpm
+pnpm add @neoxz/dss-sdk
+```
+
+```bash pip
+pip install neoxz-dss
+```
+
+```bash swift
+# Add to Package.swift dependencies:
+# .package(url: "https://github.com/neoxz/dss-swift", from: "1.0.0")
+```
+
+</CodeGroup>
+
+## 2. Initialize the Client
+
+<CodeGroup>
+
+```typescript TypeScript
+import { DSSClient } from "@neoxz/dss-sdk";
+
+const dss = new DSSClient({
+  apiKey: process.env.NEOXZ_API_KEY!,
+  environment: "sandbox",
+  gateway: "https://gateway.sandbox.neoxz.engineering",
+});
+```
+
+```python Python
+from neoxz_dss import DSSClient
+import os
+
+dss = DSSClient(
+    api_key=os.environ["NEOXZ_API_KEY"],
+    environment="sandbox",
+    gateway="https://gateway.sandbox.neoxz.engineering",
+)
+```
+
+```swift Swift
+import NeoxzDSS
+
+let dss = DSSClient(
+    apiKey: ProcessInfo.processInfo.environment["NEOXZ_API_KEY"]!,
+    environment: .sandbox,
+    gateway: URL(string: "https://gateway.sandbox.neoxz.engineering")!
+)
+```
+
+</CodeGroup>
+
+## 3. Enroll a Device
+
+Enrollment binds the user's biometric to the device Secure Enclave. It runs once per device.
+
+<CodeGroup>
+
+```typescript TypeScript
+const enrollment = await dss.enrollDevice({
+  userId: "user_abc123",
+  biometricPrompt: "Confirm your identity to enroll this device",
+});
+
+console.log("Device bonded:", enrollment.deviceId);
+console.log("Public key:", enrollment.publicKey);
+```
+
+```python Python
+enrollment = dss.enroll_device(
+    user_id="user_abc123",
+    biometric_prompt="Confirm your identity to enroll this device",
+)
+
+print(f"Device bonded: {enrollment.device_id}")
+print(f"Public key: {enrollment.public_key}")
+```
+
+```swift Swift
+let enrollment = try await dss.enrollDevice(
+    userId: "user_abc123",
+    biometricPrompt: "Confirm your identity to enroll this device"
+)
+
+print("Device bonded: \(enrollment.deviceId)")
+print("Public key: \(enrollment.publicKey)")
+```
+
+</CodeGroup>
+
+## 4. Start Continuous Handshakes
+
+Once enrolled, start the handshake loop. The SDK handles signing, submission, and retry on a 3-second cadence.
+
+<CodeGroup>
+
+```typescript TypeScript
+const session = await dss.startSession({
+  deviceId: enrollment.deviceId,
+  onTrustScore: (score) => {
+    console.log(`Trust: ${score.composite} (D:${score.device} C:${score.contact} L:${score.location})`);
+
+    if (score.composite < 0.75) {
+      // Step-up authentication required
+      requireStepUp();
+    }
+  },
+  onSessionTerminated: (reason) => {
+    console.warn("Session ended:", reason);
+    redirectToLogin();
+  },
+});
+```
+
+```python Python
+def on_trust_score(score):
+    print(f"Trust: {score.composite} "
+          f"(D:{score.device} C:{score.contact} L:{score.location})")
+    if score.composite < 0.75:
+        require_step_up()
+
+def on_session_terminated(reason):
+    print(f"Session ended: {reason}")
+    redirect_to_login()
+
+session = dss.start_session(
+    device_id=enrollment.device_id,
+    on_trust_score=on_trust_score,
+    on_session_terminated=on_session_terminated,
+)
+```
+
+```swift Swift
+let session = try await dss.startSession(
+    deviceId: enrollment.deviceId,
+    onTrustScore: { score in
+        print("Trust: \(score.composite) (D:\(score.device) C:\(score.contact) L:\(score.location))")
+        if score.composite < 0.75 {
+            requireStepUp()
+        }
+    },
+    onSessionTerminated: { reason in
+        print("Session ended: \(reason)")
+        redirectToLogin()
+    }
+)
+```
+
+</CodeGroup>
+
+## 5. Gate a Protected Action
+
+Use the current trust score to authorize sensitive operations. No extra OTP prompt required.
+
+<CodeGroup>
+
+```typescript TypeScript
+async function transferFunds(amount: number, destination: string) {
+  const authorized = await dss.authorize({
+    deviceId: enrollment.deviceId,
+    action: "transfer_funds",
+    requiredScore: 0.90,
+  });
+
+  if (!authorized.granted) {
+    throw new Error(`Trust ${authorized.score} below required 0.90`);
+  }
+
+  return api.transfer(amount, destination);
+}
+```
+
+```python Python
+def transfer_funds(amount: float, destination: str):
+    authorized = dss.authorize(
+        device_id=enrollment.device_id,
+        action="transfer_funds",
+        required_score=0.90,
+    )
+
+    if not authorized.granted:
+        raise PermissionError(f"Trust {authorized.score} below required 0.90")
+
+    return api.transfer(amount, destination)
+```
+
+```swift Swift
+func transferFunds(amount: Double, destination: String) async throws {
+    let authorized = try await dss.authorize(
+        deviceId: enrollment.deviceId,
+        action: "transfer_funds",
+        requiredScore: 0.90
+    )
+
+    guard authorized.granted else {
+        throw DSSError.insufficientTrust(authorized.score, required: 0.90)
+    }
+
+    try await api.transfer(amount: amount, destination: destination)
+}
+```
+
+</CodeGroup>
+
+## What You Just Replaced
+
+In roughly 50 lines of code, you removed:
+
+- Password storage and reset flows
+- SMS OTP integration and gateway costs
+- TOTP enrollment and recovery codes
+- Session token refresh logic
+- "Suspicious login" email alerts
+- Device fingerprinting libraries
+
+<CardGroup cols={2}>
+  <Card title="Review the Protocol" icon="book" href="/dss/overview">
+    Understand the three triangulation vectors and trust-score math behind each handshake.
+  </Card>
+  <Card title="Trust Score Reference" icon="chart-line" href="/dss/trust-score">
+    Tune thresholds for your risk tolerance and step-up rules.
+  </Card>
+  <Card title="Multi-Device Recovery" icon="key" href="/dss/multi-device-recovery">
+    Add device-loss recovery with Shamir Secret Sharing for wallet keys.
+  </Card>
+  <Card title="Upgrade Your Plan" icon="rocket" href="/solutions/pricing">
+    Ready for production? Move from Developer to Startup at $99/month.
+  </Card>
+</CardGroup>
+
+<Note>
+  Sandbox handshakes count toward your Developer tier MAU allocation but do not generate billable events. Production handshakes begin when you switch `environment` to `"production"` and use a production API key.
+</Note>
+
+<Tip>
+  Full API reference, retry semantics, webhook delivery, and advanced configuration are in the [API Reference](/api-reference/overview).
+</Tip>
