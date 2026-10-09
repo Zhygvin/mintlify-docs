@@ -1,0 +1,190 @@
+---
+title: "Wallet Recovery SDK: Eliminate Seed Phrases with Shamir Secret Sharing"
+sidebarTitle: "Wallet Recovery"
+description: "Ship self-custody crypto wallets without seed phrases. NEOXZ Wallet Recovery SDK uses 3-of-5 Shamir splits and reality-anchored identity attestation."
+---
+
+The NEOXZ Wallet Recovery SDK is a drop-in replacement for seed-phrase backup. It splits private keys across the user's trusted contacts, a recovery key, and NEOXZ identity attestation using 3-of-5 Shamir Secret Sharing, so losing a device never means losing funds.
+
+## Why Seed Phrases Must Die
+
+Seed phrases are the single largest source of self-custody loss. Industry data shows:
+
+- Billions of dollars in crypto are permanently lost to forgotten or destroyed seed phrases
+- Phishing attacks against seed phrases drain exchanges and individual wallets weekly
+- "Not your keys, not your coins" is incompatible with mass adoption while seed phrases exist
+- Hardware wallets improve storage but still rely on seed-phrase recovery as the fallback
+
+DSS Wallet Recovery replaces the seed phrase without reintroducing custodial risk. The user still holds their keys. The keys are just recoverable through reality-anchored identity instead of a 12-word string on paper.
+
+## How It Works
+
+<Steps>
+  <Step title="Key generation on device">
+    Private keys are generated inside the device Secure Enclave. They never leave the hardware boundary.
+  </Step>
+  <Step title="Shamir split into five shares">
+    The key is mathematically split so any 3 of 5 shares reconstruct it; 2 or fewer reveal nothing.
+  </Step>
+  <Step title="Shares distributed">
+    One share each to: the user's primary device, a secondary device, two trusted contacts, and the NEOXZ identity attestation service.
+  </Step>
+  <Step title="Recovery requires DSS attestation">
+    Reconstructing the key requires 3 shares plus a successful DSS triangulation (device + contact + location) proving the person recovering is the original owner.
+  </Step>
+</Steps>
+
+See [Multi-Device Recovery](/dss/multi-device-recovery) for the full protocol detail.
+
+## What Developers Get
+
+<CardGroup cols={2}>
+  <Card title="Drop-in SDK" icon="cube">
+    Native Swift, Kotlin, TypeScript, and Rust bindings. Supports Bitcoin, Ethereum, Solana, Cosmos, and any ECDSA/EdDSA chain.
+  </Card>
+  <Card title="White-Label UX" icon="palette">
+    Full customization of recovery flows. Match your wallet brand without reimplementing the cryptography.
+  </Card>
+  <Card title="No Custodial Risk" icon="shield-check">
+    NEOXZ holds one Shamir share. Zero shares means zero ability to access user funds. Not custody.
+  </Card>
+  <Card title="Compliance-Ready" icon="file-signature">
+    Recovery events generate [compliance attestations](/solutions/compliance-attestation) suitable for VASP and MiCA reporting.
+  </Card>
+</CardGroup>
+
+## Supported Chains
+
+| Chain | Key Scheme | Status |
+| --- | --- | --- |
+| Bitcoin | secp256k1 ECDSA, Taproot | GA |
+| Ethereum | secp256k1 ECDSA | GA |
+| Solana | Ed25519 | GA |
+| Cosmos SDK chains | secp256k1 / Ed25519 | GA |
+| Polkadot / Substrate | sr25519 | Beta |
+| Aptos / Sui | Ed25519 | Beta |
+| Any ECDSA/EdDSA chain | Custom | Available via SDK |
+
+## Integration Example
+
+<CodeGroup>
+
+```typescript TypeScript
+import { WalletRecovery } from "@neoxz/wallet-recovery";
+
+const wallet = new WalletRecovery({
+  apiKey: process.env.NEOXZ_API_KEY!,
+  chain: "ethereum",
+});
+
+// User creates wallet
+const { address, deviceShare } = await wallet.create({
+  userId: "user_abc123",
+  trustedContacts: ["+15551234567", "+15559876543"],
+});
+
+// Later: user loses device
+const recovered = await wallet.recover({
+  userId: "user_abc123",
+  dssAttestation: await dss.attestIdentity("user_abc123"),
+});
+
+console.log("Wallet restored:", recovered.address);
+```
+
+```kotlin Kotlin
+val wallet = WalletRecovery(
+    apiKey = BuildConfig.NEOXZ_API_KEY,
+    chain = Chain.ETHEREUM,
+)
+
+val creation = wallet.create(
+    userId = "user_abc123",
+    trustedContacts = listOf("+15551234567", "+15559876543"),
+)
+
+// Later: user loses device
+val recovered = wallet.recover(
+    userId = "user_abc123",
+    dssAttestation = dss.attestIdentity("user_abc123"),
+)
+```
+
+```swift Swift
+let wallet = WalletRecovery(
+    apiKey: ProcessInfo.processInfo.environment["NEOXZ_API_KEY"]!,
+    chain: .ethereum
+)
+
+let creation = try await wallet.create(
+    userId: "user_abc123",
+    trustedContacts: ["+15551234567", "+15559876543"]
+)
+
+// Later: user loses device
+let recovered = try await wallet.recover(
+    userId: "user_abc123",
+    dssAttestation: try await dss.attestIdentity("user_abc123")
+)
+```
+
+</CodeGroup>
+
+## Pricing
+
+<CardGroup cols={3}>
+  <Card title="SDK License" icon="code">
+    **$25,000 / year**
+    Unlimited wallets, white-label rights, all supported chains
+  </Card>
+  <Card title="Managed Recovery Service" icon="cloud">
+    **$0.50 / recovery event**
+    Pay only when a recovery actually fires. Includes DSS attestation.
+  </Card>
+  <Card title="Consumer App Licensing" icon="mobile">
+    **Custom**
+    For wallet apps with 100K+ users, revenue share or flat annual
+  </Card>
+</CardGroup>
+
+## Target Buyers
+
+<CardGroup cols={2}>
+  <Card title="Self-Custody Wallet Teams" icon="wallet">
+    MetaMask alternatives, Trust Wallet competitors, and chain-specific wallets looking for a recovery differentiator.
+  </Card>
+  <Card title="Crypto Exchanges" icon="arrow-right-arrow-left">
+    Centralized exchanges offering optional self-custody vaults to retain users leaving for self-custody.
+  </Card>
+  <Card title="DeFi Protocols" icon="chart-bar">
+    Projects that want to reduce user support burden from lost-key support tickets.
+  </Card>
+  <Card title="Enterprise Treasury" icon="building-columns">
+    Corporate treasuries managing on-chain assets with multi-party recovery requirements.
+  </Card>
+</CardGroup>
+
+## Why This Wins Against Alternatives
+
+| Approach | Weakness | DSS Recovery Advantage |
+| --- | --- | --- |
+| 12-word seed phrase | User loses or is phished | No seed phrase exists to lose or phish |
+| Hardware wallet alone | Device breaks or is destroyed | Recovery requires only 3 of 5 shares |
+| Social recovery (contacts only) | Collusion risk, no identity binding | DSS triangulation prevents impersonation |
+| Centralized custody | Not actually self-custody | NEOXZ holds 1 of 5 shares; cannot act alone |
+| MPC (multi-party computation) | Complex integration, high cost | Standard Shamir, simple SDK, known cryptography |
+
+## Get Started
+
+<CardGroup cols={2}>
+  <Card title="Request SDK Access" icon="calendar" href="/solutions/request-a-demo">
+    Mention "wallet recovery" in your demo request for a chain-specific walkthrough.
+  </Card>
+  <Card title="Review the Protocol" icon="key" href="/dss/multi-device-recovery">
+    Full technical specification of the Shamir split and recovery flow.
+  </Card>
+</CardGroup>
+
+<Warning>
+  Shamir Secret Sharing is mathematically sound only when implemented correctly. The NEOXZ SDK uses the standard SLIP-39 scheme and has been reviewed by third-party cryptographers. Audit reports available on request.
+</Warning>
