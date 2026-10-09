@@ -1,0 +1,167 @@
+---
+title: 'Atlassian + Workato Integration: NEOXZ Operations Stack'
+sidebarTitle: 'Atlassian + Workato'
+description: 'How NEOXZ runs customer support, lead capture, and partner workflows across Confluence, the Atlassian AI chatbot, Workato Genie, and Mintlify docs.'
+---
+
+NEOXZ operations run on an integrated Atlassian and Workato Genie stack. This page documents the connection points: Confluence as the internal knowledge base, Jira for customer and partner workflow, the Atlassian AI customer support chatbot as the inbound deflection layer, and Workato Genie as the automation and outbound orchestration layer. If you are setting up the stack for your own team, work through the checklist at the end of this page.
+
+## Stack Overview
+
+<CardGroup cols={2}>
+  <Card title="Confluence Space NeoXZ" icon="book" href="https://zhygvin.atlassian.net/wiki/spaces/NeoXZ">
+    Internal knowledge base at https://zhygvin.atlassian.net/wiki/spaces/NeoXZ. Source of truth for runbooks, partner playbooks, and investor materials. Connected to Workato Genie for automated page creation and notification triggers.
+  </Card>
+  <Card title="Atlassian AI Customer Support Chatbot" icon="bot">
+    Deflects tier-1 support inquiries by grounding on this public docs site (https://neoxz-engineering-inc.mintlify.app) plus the internal Confluence space. Routes qualified leads and complex issues into Jira with the correct assignee and priority.
+  </Card>
+  <Card title="Workato Genie" icon="wand-magic-sparkles">
+    Outbound marketing automation, lead enrichment, CRM sync, and partner notification workflows. Acts as the bridge between inbound chatbot data and the rest of the revenue stack.
+  </Card>
+  <Card title="Mintlify Docs" icon="server" href="https://neoxz-engineering-inc.mintlify.app">
+    Public knowledge base (this site) feeding both the chatbot and Genie. SEO-structured and versioned so the chatbot always retrieves the latest product and protocol information.
+  </Card>
+</CardGroup>
+
+## Customer Support Chatbot
+
+The Atlassian AI chatbot handles every visitor interaction in a single, auditable flow. It resolves simple questions immediately and converts complex or high-value inquiries into tracked Jira tickets.
+
+<Steps>
+  <Step title="Visitor asks a question">
+    A visitor types a question into the chatbot widget embedded on docs.neoxz.engineering or inside the Atlassian support portal. Typical topics include DSS protocol fundamentals, pricing, compliance attestation, or partnership terms.
+  </Step>
+  <Step title="Chatbot searches grounded sources">
+    The chatbot queries two knowledge sources in parallel:
+    1. This public docs site (https://neoxz-engineering-inc.mintlify.app)
+    2. The internal Confluence NeoXZ space (https://zhygvin.atlassian.net/wiki/spaces/NeoXZ)
+
+    Answers are grounded on verified content only; no hallucinated protocol details are returned.
+  </Step>
+  <Step title="Deflection or escalation">
+    If the chatbot resolves the question (for example, how to schedule a [demo](/solutions/request-a-demo) or where to find [pricing](/solutions/pricing)), the conversation closes with no human intervention (a deflection win).
+  </Step>
+  <Step title="Qualified lead routing">
+    If the question signals an enterprise sale, partnership, or investor interest, the chatbot creates a Jira ticket and routes it to the correct inbox:
+    - sales@neoxz.engineering for enterprise and government buyers
+    - partnerships@neoxz.engineering for design partners and resellers
+    - investors@neoxz.engineering for due-diligence and cap-table requests
+    - press@neoxz.engineering for media and analyst inquiries
+  </Step>
+  <Step title="Workato Genie enrichment">
+    Workato Genie picks up the new Jira ticket, enriches the lead via Clearbit or Apollo (company name, size, industry, tech stack), and syncs the enriched record into HubSpot or Salesforce so the assigned rep has full context before first contact.
+  </Step>
+</Steps>
+
+## Knowledge Base Sources
+
+The chatbot and Genie workflows are grounded on the following verified sources. Do not add unlisted wikis or draft documents to production knowledge sources without engineering review.
+
+| Source | URL / Path | Content Type | Visibility |
+|--------|-----------|--------------|------------|
+| Public docs site | https://neoxz-engineering-inc.mintlify.app/sitemap.xml | Product docs, guides, API reference | Public |
+| Confluence NeoXZ space | https://zhygvin.atlassian.net/wiki/spaces/NeoXZ | Runbooks, playbooks, investor materials | Atlassian-authenticated |
+| DSS protocol specification | [/dss/overview](/dss/overview) and child pages | Protocol concepts, architecture, SDKs | Public |
+| Proof of Work telemetry | [/dss/proof-of-work](/dss/proof-of-work) | Sovereign Tier A+ benchmarks, latency, energy savings | Public |
+| Patent claims | [/dss/claims](/dss/claims) | 18 pending claims, licensing terms | Public |
+
+## Workato Genie Automations
+
+Genie runs four production automations that start from chatbot output or webhooks and propagate data across CRM, email, Slack, and Confluence.
+
+<CardGroup cols={2}>
+  <Card title="Lead Capture → CRM" icon="filter">
+    A [demo request](/solutions/request-a-demo) submitted on the Mintlify site triggers Workato to enrich the lead via Clearbit or Apollo, create a Jira ticket with the enriched payload, and sync the record to HubSpot or Salesforce. Sales reps get a pre-populated contact record with inferred company size and industry.
+  </Card>
+  <Card title="Design-Partner Pipeline" icon="handshake">
+    A new design-partner inquiry (submitted through the chatbot or a form) triggers Confluence page creation from a standard template. A Slack notification is sent to the founder (#partnerships channel) with a link to the new page and the prospect’s qualification notes.
+  </Card>
+  <Card title="Usage-Based Upsell Alert" icon="chart-line">
+    When a customer’s DSS monthly active user (MAU) count crosses a threshold, a DSS webhook fires. Workato detects the event, looks up the account owner in the CRM, and sends a pre-written upgrade talk track to the sales rep via email or Slack.
+  </Card>
+  <Card title="Attestation Report Delivery" icon="file-shield">
+    After a [Compliance Attestation](/solutions/compliance-attestation) is generated, Workato attaches the signed PDF to a Confluence page, emails the customer a secure signed-link, and logs the delivery timestamp in Jira for audit trail.
+  </Card>
+</CardGroup>
+
+## Suggested Genie Agent Prompt
+
+Copy the system prompt below into a new Workato Genie agent. It configures the agent to act as the NEOXZ Customer Operations Agent, route inquiries correctly, and ground every answer on verified sources.
+
+<CodeGroup>
+```text Genie System Prompt
+You are the NEOXZ Customer Operations Agent. Your job is to answer visitor questions about the Discrete Sovereign Settlement (DSS) protocol and NEOXZ products, and to route qualified leads to the correct team inbox.
+
+Knowledge sources:
+- Public docs site: https://neoxz-engineering-inc.mintlify.app
+- Internal Confluence space: https://zhygvin.atlassian.net/wiki/spaces/NeoXZ
+
+Routing rules:
+- Enterprise or government sale inquiries → sales@neoxz.engineering
+- Design partner, reseller, or integration partner inquiries → partnerships@neoxz.engineering
+- Investor, due-diligence, or cap-table inquiries → investors@neoxz.engineering
+- Media, analyst, or press inquiries → press@neoxz.engineering
+
+Qualification criteria:
+- Use the Ideal Customer Profile (ICP) definitions found at /solutions/target-buyers (enterprise/government buyers, regulated industries, sustainability-focused procurement teams).
+- Capture: company name, approximate headcount, industry, current authentication stack, and primary use case.
+
+Content policy:
+- Never invent DSS protocol facts, cryptographic details, or performance numbers.
+- When unsure of a protocol detail, defer to /dss/overview and ask the visitor to contact engineering@neoxz.engineering.
+- Use only verified metrics sourced from /dss/proof-of-work, such as Sovereign Tier A+ (9.8/10), 70 percent measured energy savings, and 1 ms latency.
+- Do not disclose internal Confluence content to public visitors; route internal questions to the appropriate internal email.
+```
+</CodeGroup>
+
+## Setup Checklist
+
+Follow these steps to replicate the NEOXZ operations stack in your own Atlassian + Workato environment.
+
+<Steps>
+  <Step title="Add Mintlify as a knowledge source">
+    In the Atlassian AI chatbot settings, add the public docs sitemap as a knowledge source:
+    `https://neoxz-engineering-inc.mintlify.app/sitemap.xml`
+  </Step>
+  <Step title="Add Confluence NeoXZ space">
+    Add the internal Confluence space as a second knowledge source:
+    `https://zhygvin.atlassian.net/wiki/spaces/NeoXZ`
+    Ensure the chatbot app has read permissions at the workspace level.
+  </Step>
+  <Step title="Create a Workato HTTP connector">
+    In Workato, create an HTTP connector pointing at the DSS webhook endpoints. When the API reference is live, see `/api-reference/endpoints/webhooks` for endpoint schemas and authentication headers.
+  </Step>
+  <Step title="Connect downstream systems">
+    Create Workato connections for your CRM (HubSpot or Salesforce), email provider (Gmail or Outlook), and Slack workspace. Test each connection with a ping recipe before enabling production automations.
+  </Step>
+  <Step title="Paste the Genie system prompt">
+    Create a new Genie agent and paste the system prompt from the section above. Set the agent name to "NEOXZ Customer Operations Agent" and assign the correct knowledge sources.
+  </Step>
+  <Step title="Test end-to-end flows">
+    Submit dummy inquiries from each buyer segment (enterprise, partner, investor, press) and verify that:
+    1. The chatbot answers correctly or creates a Jira ticket.
+    2. Workato enriches and syncs to the CRM.
+    3. The correct team inbox receives the routed ticket.
+  </Step>
+</Steps>
+
+## Operational Links
+
+<CardGroup cols={2}>
+  <Card title="Confluence Space NeoXZ" icon="book" href="https://zhygvin.atlassian.net/wiki/spaces/NeoXZ">
+    Internal knowledge base, runbooks, and partner playbooks. Requires Atlassian workspace login.
+  </Card>
+  <Card title="Public docs sitemap" icon="sitemap" href="https://neoxz-engineering-inc.mintlify.app/sitemap.xml">
+    Machine-readable index of all public NEOXZ documentation.
+  </Card>
+  <Card title="DSS Proof of Work" icon="shield-check" href="/dss/proof-of-work">
+    Sovereign Tier A+ benchmarks, latency telemetry, and energy savings data.
+  </Card>
+  <Card title="Target Buyers for ICP" icon="briefcase" href="/solutions/target-buyers">
+    Ideal Customer Profile definitions used by the chatbot for lead qualification.
+  </Card>
+</CardGroup>
+
+<Note>
+Confluence pages require Atlassian workspace login. The chatbot sees them because it is authenticated at the workspace level; public visitors see only the Mintlify docs. If a visitor asks for content that exists only in Confluence, route them to the appropriate team inbox rather than quoting internal details.
+</Note>

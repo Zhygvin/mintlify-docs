@@ -1,0 +1,227 @@
+---
+title: "NEOXZ in Atlassian and Workato: Confluence, Jira, and Genie Agents"
+sidebarTitle: "Atlassian + Workato"
+description: "Connect NEOXZ DSS to Confluence, Jira, and Workato Genie. Automate lead capture, partner outreach, and compliance workflows across the Atlassian stack."
+---
+
+NEOXZ Engineering operates a live Confluence space and Workato Genie environment to automate marketing, sales, and compliance workflows for the Discrete Sovereign Settlement (DSS) protocol. This page documents how DSS integrates with Atlassian products and how Workato recipes orchestrate the business processes around it.
+
+## Live Confluence Workspace
+
+The NEOXZ team coordinates documentation planning, launch tracking, and partner conversations in Confluence.
+
+<CardGroup cols={2}>
+  <Card title="Confluence Space" icon="atlassian" href="https://zhygvin.atlassian.net/wiki/spaces/NeoXZ">
+    Primary workspace at zhygvin.atlassian.net
+    Space key: `NeoXZ`
+  </Card>
+  <Card title="Mintlify Live Doc Tracker" icon="file-lines" href="https://zhygvin.atlassian.net/wiki/spaces/NeoXZ/pages/98313/Mintify+live+doc+2026-10-09">
+    Launch tracker for this documentation site
+    Page ID: 98313
+  </Card>
+</CardGroup>
+
+## Workato Genie Agent Setup
+
+Genie agents handle inbound lead qualification, outbound sequencing, and partner routing. Point Genie at the published documentation as its knowledge source.
+
+<Steps>
+  <Step title="Add this site as a knowledge source">
+    In Workato Genie, add a new web knowledge source. URL:
+
+    ```text Knowledge source URL
+    https://neoxz-engineering-inc.mintlify.app
+    ```
+
+    Or point directly at the sitemap for faster indexing:
+
+    ```text Sitemap URL
+    https://neoxz-engineering-inc.mintlify.app/sitemap.xml
+    ```
+  </Step>
+  <Step title="Install the DSS Agent system prompt">
+    Use the system prompt below to ground Genie in NEOXZ positioning and routing rules.
+  </Step>
+  <Step title="Connect your CRM and email tools">
+    Recommended stack: HubSpot (CRM) + Gmail or Outlook (outreach) + Slack (internal notifications).
+  </Step>
+  <Step title="Enable the five core recipes">
+    Lead capture, qualification, routing, sequence delivery, and attribution reporting (recipes documented below).
+  </Step>
+</Steps>
+
+## Genie Agent System Prompt
+
+Copy-paste into Workato Genie as the agent system prompt:
+
+```text NEOXZ Genie Agent Prompt
+You are the NEOXZ Sales and Partnerships Agent for NEOXZ Engineering Inc.
+
+Your knowledge source is https://neoxz-engineering-inc.mintlify.app. Never answer
+questions about NEOXZ, DSS, pricing, or capabilities without citing a specific page
+from that site.
+
+PRODUCT:
+NEOXZ Engineering builds the Discrete Sovereign Settlement (DSS) protocol, a
+continuous-authentication system that eliminates passwords, OTPs, and seed phrases.
+Verified Sovereign Tier A+ in production (see /dss/proof-of-work). Patent-pending
+with 18 claims (see /dss/claims).
+
+ROUTING RULES:
+- Developer inquiry (SDK, integration, free tier) -> link to /solutions/sdk-quickstart
+- Enterprise inquiry (1000+ MAU, VPC, compliance) -> route to sales@neoxz.engineering
+  and link /solutions/for-enterprises
+- Crypto wallet inquiry -> link /solutions/wallet-recovery
+- Compliance/audit inquiry -> link /solutions/compliance-attestation and route to
+  sales@neoxz.engineering
+- ESG/carbon inquiry -> link /solutions/carbon-credits
+- Investor inquiry -> route to investors@neoxz.engineering, link
+  /company/for-investors
+- Press/analyst -> route to press@neoxz.engineering, link /company/press-kit
+- Partner inquiry -> route to partnerships@neoxz.engineering, link
+  /company/partner-program
+
+QUALIFICATION QUESTIONS (ask before routing):
+1. What is your role and company?
+2. What authentication system are you using today?
+3. Rough MAU count?
+4. Timeline for evaluating replacement?
+5. Any compliance requirements (SOC 2, HIPAA, SEC, MiCA)?
+
+TONE:
+- Direct and specific
+- Lead with verified metrics from /dss/proof-of-work (A+ grade, 9.8/10,
+  1 ms latency, 70% energy savings)
+- Never invent capabilities not documented on the site
+- Always offer a demo link: https://neoxz-engineering-inc.mintlify.app/solutions/request-a-demo
+
+ESCALATION:
+If a prospect represents a Fortune 500 company, a crypto exchange with over 1M users,
+or an investor fund with over $500M AUM, flag immediately to neilbalog07@gmail.com
+in addition to normal routing.
+```
+
+## Core Workato Recipes
+
+Build these five recipes to automate the full lead-to-close motion.
+
+### Recipe 1: Inbound Lead Capture
+
+| Field | Value |
+| --- | --- |
+| Trigger | HTTP webhook on form submission from `/solutions/request-a-demo` |
+| Enrichment | Clearbit or Apollo enrichment on company domain |
+| Routing | Send to Genie for qualification scoring |
+| Output | HubSpot contact + deal creation, Slack notification |
+
+### Recipe 2: Lead Qualification by Genie
+
+| Field | Value |
+| --- | --- |
+| Trigger | New HubSpot contact in "Inbound" lifecycle stage |
+| Agent action | Genie reads enrichment data, calls DSS knowledge base, produces fit score 1-10 |
+| Output | Updates HubSpot with fit score, segment tag, and routing recommendation |
+
+### Recipe 3: Outbound Sequence Delivery
+
+| Field | Value |
+| --- | --- |
+| Trigger | HubSpot contact tagged with buyer segment (fintech, crypto, compliance, ESG) |
+| Agent action | Genie selects segment-specific email template from the outreach playbook |
+| Output | Gmail/Outlook sends personalized sequence (3 emails, 5-day cadence) |
+
+### Recipe 4: Partner Routing
+
+| Field | Value |
+| --- | --- |
+| Trigger | Form submission to `/company/partner-program` |
+| Agent action | Genie classifies partner tier (referral, reseller, integrator, OEM) |
+| Output | Routes to `partnerships@neoxz.engineering`, creates HubSpot deal with tier tag |
+
+### Recipe 5: Weekly Attribution Report
+
+| Field | Value |
+| --- | --- |
+| Trigger | Cron: every Monday at 9am UTC+8 |
+| Agent action | Pulls HubSpot deals, Mintlify analytics, Workato recipe logs |
+| Output | Posts summary to Confluence page in NeoXZ space + Slack digest |
+
+## Confluence Page Templates
+
+Create these pages in the NeoXZ Confluence space to track execution:
+
+<CardGroup cols={2}>
+  <Card title="Launch Tracker" icon="rocket">
+    Track go-live checklist items, blockers, and milestones for each solution launch.
+  </Card>
+  <Card title="Partner Pipeline" icon="handshake">
+    Kanban of active partner conversations by tier (referral / reseller / integrator / OEM).
+  </Card>
+  <Card title="Investor Pipeline" icon="chart-line">
+    Fund-by-fund status: intro'd, deck sent, call booked, NDA signed, data room access.
+  </Card>
+  <Card title="Compliance Log" icon="file-signature">
+    Record every attestation report issued, including DSS hash and recipient.
+  </Card>
+</CardGroup>
+
+## Jira Workflow for Design Partners
+
+For each design-partner enterprise prospect, create a Jira epic with these child issues:
+
+<Steps>
+  <Step title="Qualification call">
+    30-minute discovery. Fill out qualification form. Decision: proceed or disqualify.
+  </Step>
+  <Step title="Technical demo">
+    Live DSS walkthrough using sandbox environment. Record for internal reuse.
+  </Step>
+  <Step title="Commercial proposal">
+    Draft design-partner contract (40-60% discount, 12-month case study commitment).
+  </Step>
+  <Step title="Legal review">
+    NDA, MSA, patent sublicense terms. Target 2-week turnaround.
+  </Step>
+  <Step title="Deployment">
+    Sandbox integration, production rollout, go-live. Target 30-day deployment.
+  </Step>
+  <Step title="Case study">
+    Publish customer story. First 10 per vertical receive founding-customer designation.
+  </Step>
+</Steps>
+
+## Atlassian Forge App (Planned)
+
+A native Confluence and Jira app that embeds DSS continuous authentication into the Atlassian workspace is on the Q1 2027 roadmap.
+
+Planned capabilities:
+
+- Continuous DSS handshake validation for Confluence page access
+- Trust-score-gated Jira issue transitions (e.g., require score greater than 0.90 to close security tickets)
+- Attestation report generation from Confluence into the compliance log
+- Bridge integration using Atlassian Forge platform APIs
+
+<Note>
+  Reference: [Atlassian Forge Bridge documentation](https://developer.atlassian.com/platform/forge/extend-ui-with-custom-options/#bridge). The planned Forge app will use the bridge to render DSS trust-score indicators in the Atlassian UI.
+</Note>
+
+## Links to Share Elsewhere
+
+Give these URLs to Workato, Confluence, and your outreach tools:
+
+| Purpose | URL |
+| --- | --- |
+| Main site | https://neoxz-engineering-inc.mintlify.app |
+| Pricing | https://neoxz-engineering-inc.mintlify.app/solutions/pricing |
+| Demo request | https://neoxz-engineering-inc.mintlify.app/solutions/request-a-demo |
+| SDK quickstart | https://neoxz-engineering-inc.mintlify.app/solutions/sdk-quickstart |
+| Proof of Work | https://neoxz-engineering-inc.mintlify.app/dss/proof-of-work |
+| For Investors | https://neoxz-engineering-inc.mintlify.app/company/for-investors |
+| Partner Program | https://neoxz-engineering-inc.mintlify.app/company/partner-program |
+| Target Buyers | https://neoxz-engineering-inc.mintlify.app/company/target-buyers |
+| Press Kit | https://neoxz-engineering-inc.mintlify.app/company/press-kit |
+| Sitemap (for Genie) | https://neoxz-engineering-inc.mintlify.app/sitemap.xml |
+
+<Tip>
+  Share the sitemap URL with Workato Genie once, and Genie will auto-crawl all new pages as you publish them. No need to re-add individual URLs.
+</Tip>

@@ -19,6 +19,19 @@
         "pages": [
           "company/press-kit"
         ]
+      },
+      {
+        "group": "Integrations",
+        "pages": [
+          "integrations/atlassian-workato"
+        ]
+      },
+      {
+        "group": "Solutions",
+        "pages": [
+          "solutions/atlassian-workato",
+          "solutions/press-kit"
+        ]
       }
     ]
   },
