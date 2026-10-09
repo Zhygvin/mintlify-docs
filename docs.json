@@ -51,6 +51,7 @@
               "dss/multi-device-recovery",
               "dss/energy-efficiency",
               "dss/claims",
+              "dss/proof-of-work",
               "dss/proof-of-work"
             ]
           },
