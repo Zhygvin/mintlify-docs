@@ -1,0 +1,130 @@
+---
+title: "DSS for Enterprises: Replace Passwords with Sovereign Authentication"
+sidebarTitle: "For Enterprises"
+description: "License NEOXZ DSS to replace passwords, OTPs, and MFA fatigue with continuous authentication. 25M× harder to attack, 92% less energy, zero user friction."
+---
+
+NEOXZ Engineering licenses the Discrete Sovereign Settlement (DSS) protocol to enterprises that need authentication stronger than passwords plus OTPs, with lower operational cost and no user friction. The protocol is patent-pending (18 claims), production-verified at Sovereign Tier A+, and available for VPC, on-premises, or managed deployment.
+
+## Why Enterprises Choose DSS
+
+<CardGroup cols={2}>
+  <Card title="25 Million Times Harder to Attack" icon="shield-check" href="/dss/overview">
+    An attacker must simultaneously clone the device Secure Enclave, replicate the user's social graph, and match their geographic location. Phishing and SIM-swap are mathematically eliminated.
+  </Card>
+  <Card title="92% Lower Auth Energy Cost" icon="leaf" href="/dss/energy-efficiency">
+    Replaces global SMS gateways, email verification servers, and OTP retry cycles with cryptographic handshakes that cost 0.00018 kWh each.
+  </Card>
+  <Card title="Zero User Friction" icon="face-smile" href="/dss/handshake-protocol">
+    Users never see a login prompt, OTP, or password reset. Biometric enrollment happens once. The protocol validates continuously in the background.
+  </Card>
+  <Card title="SEC-Grade Attestation" icon="file-signature" href="/dss/proof-of-work">
+    Every deployment produces cryptographically sealed telemetry reports suitable for SEC filings, SOX compliance, and audit review.
+  </Card>
+</CardGroup>
+
+## Target Industries
+
+| Industry | Pain Replaced | DSS Advantage |
+| --- | --- | --- |
+| Fintech & Banking | SMS OTP fraud, SIM-swap attacks | Device + location + contact triangulation blocks account takeover |
+| Cryptocurrency Exchanges | Seed phrase theft, phishing | Shamir Secret Sharing recovery, no seed phrases |
+| Healthcare | HIPAA audit burden, provider login fatigue | Continuous authentication with full audit trail |
+| Defense & Government | Insider threat, credential sharing | Hardware-bonded identity, impossible to share |
+| SaaS & Workforce | Password resets, MFA fatigue | One biometric enrollment, zero prompts afterward |
+| Insurance | Identity fraud at claim time | Reality-anchored continuous proof of identity |
+
+## Deployment Options
+
+<CardGroup cols={3}>
+  <Card title="Managed Cloud" icon="cloud">
+    DSS running on NEOXZ infrastructure in your choice of region. Fastest time to production. SLA 99.95%.
+  </Card>
+  <Card title="Dedicated VPC" icon="server">
+    Isolated deployment in your AWS, GCP, or Azure VPC. Data never leaves your perimeter. Compliance-friendly.
+  </Card>
+  <Card title="On-Premises" icon="building">
+    Full stack installed in your data center. Required for air-gapped and sovereign deployments.
+  </Card>
+</CardGroup>
+
+## What's Included in the Enterprise License
+
+- **Patent license**: full rights to the 18-claim [DSS patent portfolio](/dss/claims) for your deployment
+- **Source escrow**: critical components placed in third-party escrow for continuity
+- **24/7 support**: 1-hour SLA with named technical account manager
+- **Compliance package**: SEC-grade attestation reports, SOC 2, ISO 27001 artifacts
+- **Custom SLA**: negotiated availability, latency, and incident response terms
+- **Dual-region failover**: active-active deployment across geographic regions
+- **Legal indemnification**: patent and IP indemnification for licensed use
+
+## Verified Production Metrics
+
+Every enterprise deployment inherits the same operational profile documented in the [NEOXZ Telemetry Report](/dss/proof-of-work):
+
+<CardGroup cols={4}>
+  <Card title="A+ Grade" icon="trophy">
+    9.8/10 on the Global Sovereign Net
+  </Card>
+  <Card title="1 ms Latency" icon="gauge-high">
+    End-to-end handshake roundtrip
+  </Card>
+  <Card title="0 Packet Loss" icon="network-wired">
+    245 logs/sec telemetry streaming
+  </Card>
+  <Card title="70% Energy Save" icon="leaf">
+    Measured on live production traffic
+  </Card>
+</CardGroup>
+
+## Reference Architecture
+
+A typical enterprise deployment integrates five layers:
+
+<Steps>
+  <Step title="Identity enrollment">
+    Users enroll via your existing SSO or IDP. Biometric and Secure Enclave bonding happens inside your perimeter during onboarding.
+  </Step>
+  <Step title="Continuous handshake layer">
+    DSS gateway deployed next to your application tier. Validates handshakes every 3 seconds without round-tripping to your identity provider.
+  </Step>
+  <Step title="Trust score decisioning">
+    Composite score (Device 0.40 + Contact 0.30 + Location 0.30) drives access control, step-up, and session termination inside your app.
+  </Step>
+  <Step title="Attestation and audit">
+    All handshake outcomes are hashed, sealed, and streamed to your SIEM. Quarterly SEC-grade reports generated automatically.
+  </Step>
+  <Step title="Recovery and continuity">
+    Multi-device recovery via Shamir Secret Sharing. Lost-device scenarios resolve without password resets or support tickets.
+  </Step>
+</Steps>
+
+## Pricing
+
+Enterprise licensing is custom-quoted based on MAU, deployment model, and compliance requirements. Typical ranges:
+
+| Deployment | Starting Price (annual) |
+| --- | --- |
+| Managed cloud, up to 1M MAU | $150,000 |
+| Dedicated VPC, up to 5M MAU | $350,000 |
+| On-premises, unlimited MAU | $500,000+ |
+| Patent-only license (self-build) | $1,000,000+ |
+
+<Note>
+  All quotes include implementation support, legal documentation, and the first year of 24/7 support. Multi-year commitments receive volume discounts up to 30%.
+</Note>
+
+## Get Started
+
+<CardGroup cols={2}>
+  <Card title="Request a Demo" icon="calendar" href="/solutions/request-a-demo">
+    Book a 30-minute technical walkthrough with the NEOXZ engineering team.
+  </Card>
+  <Card title="Review the Protocol" icon="book" href="/dss/overview">
+    Read the full DSS protocol specification before your call.
+  </Card>
+</CardGroup>
+
+<Tip>
+  Design-partner pricing is available for the first 10 enterprise customers in each vertical. Discounts of 40-60% in exchange for a public case study.
+</Tip>
