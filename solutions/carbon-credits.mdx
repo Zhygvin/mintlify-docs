@@ -1,0 +1,134 @@
+---
+title: "Authentication Carbon Credits: Verified Energy-Reduction Offsets"
+sidebarTitle: "Carbon Credits"
+description: "NEOXZ sells verified carbon offset credits backed by DSS protocol's 92.1% authentication energy reduction, suitable for ESG reporting and Scope 3 reduction."
+---
+
+NEOXZ Authentication Carbon Credits convert the Discrete Sovereign Settlement (DSS) protocol's measured 92.1% energy reduction into verified, auditable carbon offsets. Enterprises buy credits to retire against Scope 2 and Scope 3 emissions, backed by cryptographically sealed telemetry.
+
+## The Energy Problem We Solve
+
+Global authentication infrastructure consumes enormous energy that most ESG programs do not even count:
+
+- SMS OTP gateways route billions of messages per day across cellular backbones
+- Email verification servers run 24/7 processing bounce-backs and retries
+- Password reset flows trigger database writes, email delivery, and support tickets
+- MFA app push notifications wake radios on billions of devices every day
+
+The combined footprint is substantial, growing with every new user, and almost entirely replaceable.
+
+## The DSS Alternative
+
+Every DSS handshake costs **0.00018 kWh**. See [Energy Efficiency](/dss/energy-efficiency) for the full accounting.
+
+Replacing legacy authentication with DSS at global scale yields:
+
+<CardGroup cols={4}>
+  <Card title="92.1%" icon="leaf">
+    Energy reduction per authenticated session
+  </Card>
+  <Card title="487.20 TWh" icon="bolt">
+    Annual energy savings at full global rollout
+  </Card>
+  <Card title="$29.2B" icon="sack-dollar">
+    Annual cost savings at current energy prices
+  </Card>
+  <Card title="A+ Grade" icon="trophy" href="/dss/proof-of-work">
+    Verified in production, 70% savings measured
+  </Card>
+</CardGroup>
+
+## How Credits Are Generated
+
+<Steps>
+  <Step title="Baseline measurement">
+    Enterprise reports current authentication volume and method (SMS, email, TOTP, push). We model baseline kWh using published grid intensities.
+  </Step>
+  <Step title="DSS deployment">
+    Enterprise deploys DSS. Every handshake is logged with its cryptographic seal and timestamp.
+  </Step>
+  <Step title="Delta calculation">
+    We compute kWh saved per handshake (baseline minus DSS actual) using the operator's cloud region grid factor.
+  </Step>
+  <Step title="Third-party verification">
+    An accredited verifier audits the telemetry seal, grid factor, and delta calculation. Issues a verified carbon credit.
+  </Step>
+  <Step title="Registry retirement">
+    Credits are registered on a recognized carbon registry and retired against the buyer's emissions reporting.
+  </Step>
+</Steps>
+
+## Credit Pricing
+
+<CardGroup cols={3}>
+  <Card title="Spot Credits" icon="cart-shopping">
+    **$0.80 per 1M handshakes**
+    Purchase as needed from available inventory
+  </Card>
+  <Card title="Forward Contracts" icon="handshake">
+    **$0.60 per 1M handshakes**
+    12-month commitment, locked rate
+  </Card>
+  <Card title="Enterprise Allocation" icon="building">
+    **Custom**
+    Bundled with Enterprise DSS license at discount
+  </Card>
+</CardGroup>
+
+## Verification and Standards
+
+NEOXZ Authentication Carbon Credits are designed to meet:
+
+| Standard | Alignment |
+| --- | --- |
+| GHG Protocol Scope 2 | Replaces grid electricity consumed by legacy auth infrastructure |
+| GHG Protocol Scope 3 | Reduces upstream emissions from SMS carrier networks |
+| ISO 14064-2 | Project-level quantification of GHG reductions |
+| Verra VCS | In active review for methodology registration |
+| Gold Standard | In active review for methodology registration |
+
+<Note>
+  Pending third-party registry acceptance, credits are sold as "pre-verified pending certification" with full refund if certification is denied. See terms before purchase.
+</Note>
+
+## Target Buyers
+
+<CardGroup cols={2}>
+  <Card title="ESG-Reporting Enterprises" icon="chart-line">
+    Public companies needing credible Scope 2 and 3 reductions tied to real operational change.
+  </Card>
+  <Card title="Cloud and Hyperscaler Partners" icon="cloud">
+    Infrastructure providers wanting to document customer-facing emissions reductions.
+  </Card>
+  <Card title="Telecom Operators" icon="tower-cell">
+    Carriers reducing SMS gateway load can monetize the resulting carbon delta.
+  </Card>
+  <Card title="Sustainability-Focused VCs" icon="seedling">
+    Portfolio-level emissions reductions attributable to specific investments.
+  </Card>
+</CardGroup>
+
+## Why This Is Real, Not Greenwashing
+
+| Common Offset Problem | NEOXZ Credit Protection |
+| --- | --- |
+| Non-additionality (would have happened anyway) | DSS deployment is the direct cause of the reduction, not a counterfactual |
+| Double counting | Each handshake has a unique cryptographic seal; credits cannot be issued twice |
+| No verification trail | Full telemetry chain from device to grid factor is publicly auditable |
+| Vague permanence claims | kWh reduction is immediate and ongoing, not reversible like reforestation |
+| Opaque methodology | Full calculation methodology published and third-party reviewed |
+
+## Get Started
+
+<CardGroup cols={2}>
+  <Card title="Request Baseline Assessment" icon="calculator" href="/solutions/request-a-demo">
+    Free analysis of your current authentication footprint and potential credit generation.
+  </Card>
+  <Card title="Review Energy Methodology" icon="leaf" href="/dss/energy-efficiency">
+    Full technical breakdown of the DSS energy model and savings calculation.
+  </Card>
+</CardGroup>
+
+<Tip>
+  Enterprises deploying DSS automatically generate credits as a byproduct of normal operation. Credits can be retired for your own ESG reporting or sold on the open market to generate additional revenue from the deployment.
+</Tip>
