@@ -9,23 +9,115 @@
   },
   "favicon": "/favicon.svg",
   "navigation": {
-    "pages": [
-      "solutions/overview",
-      "",
-      ""
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "authentication"
+            ]
+          },
+          {
+            "group": "Solutions",
+            "pages": [
+              "solutions/overview",
+              "solutions/for-enterprises",
+              "solutions/sdk-quickstart",
+              "solutions/compliance-attestation",
+              "solutions/wallet-recovery",
+              "solutions/carbon-credits",
+              "solutions/pricing",
+              "solutions/request-a-demo"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/overview",
+              "concepts/data-model",
+              "concepts/workflows"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/setup",
+              "guides/configuration",
+              "guides/integrations"
+            ]
+          },
+          {
+            "group": "DSS Protocol",
+            "pages": [
+              "dss/overview",
+              "dss/architecture",
+              "dss/device-trust-bond",
+              "dss/handshake-protocol",
+              "dss/vector-device",
+              "dss/vector-contact",
+              "dss/vector-location",
+              "dss/trust-score",
+              "dss/multi-device-recovery",
+              "dss/energy-efficiency",
+              "dss/claims",
+              "dss/proof-of-work"
+            ]
+          },
+          {
+            "group": "Help",
+            "pages": [
+              "help/faq",
+              "help/troubleshooting"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "API Overview",
+            "pages": [
+              "api-reference/overview",
+              "api-reference/authentication",
+              "api-reference/errors"
+            ]
+          },
+          {
+            "group": "Endpoints",
+            "pages": [
+              "api-reference/endpoints/resources",
+              "api-reference/endpoints/users",
+              "api-reference/endpoints/webhooks"
+            ]
+          }
+        ]
+      }
     ]
   },
   "navbar": {
     "links": [
       {
-        "label": "Support",
-        "href": "mailto:support@neoxz.com"
+        "href": "/solutions/pricing",
+        "label": "Pricing"
+      },
+      {
+        "href": "/solutions/request-a-demo",
+        "label": "Request a Demo"
+      },
+      {
+        "href": "mailto:sales@neoxz.engineering",
+        "label": "Contact Sales"
       }
     ],
     "primary": {
       "type": "button",
       "label": "Get Started",
-      "href": "/quickstart"
+      "href": "/solutions/sdk-quickstart"
     }
   },
   "footer": {
