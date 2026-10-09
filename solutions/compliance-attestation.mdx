@@ -1,0 +1,133 @@
+---
+title: "Compliance Attestation: SEC-Grade Identity Reports for Regulated Industries"
+sidebarTitle: "Compliance Attestation"
+description: "NEOXZ delivers cryptographically sealed attestation reports for SEC, SOX, HIPAA, and SOC 2 compliance. Verified identity telemetry on demand."
+---
+
+NEOXZ Compliance Attestation turns the DSS protocol's handshake stream into audit-ready reports suitable for SEC registration, tax withholding compliance, SOC 2 audits, HIPAA attestations, and board reviews. Each report carries the same verification seal as the [NEOXZ Telemetry Report](/dss/proof-of-work): VERIFIED / NEOXZ-SEC / AUTH-100%.
+
+## Why This Product Exists
+
+Regulated industries spend six to seven figures per year proving who did what, when, and from where. Traditional authentication logs do not survive adversarial audit because:
+
+- SMS and email OTPs can be intercepted, so they cannot anchor identity
+- Session tokens can be stolen and replayed, so they cannot anchor time
+- IP geolocation can be spoofed, so it cannot anchor place
+
+DSS handshakes solve all three. Every 3-second handshake is cryptographically signed by hardware Secure Enclave, carries a reality-anchored trust score, and is immutably sealed on the discrete ledger.
+
+## Report Types
+
+<CardGroup cols={2}>
+  <Card title="SEC Filing Attestation" icon="file-signature">
+    Quarterly cryptographic proof of executive and material-information access. Suitable for 10-K, 10-Q, and 8-K filings.
+  </Card>
+  <Card title="Tax Withholding Compliance" icon="receipt">
+    Per-transaction identity attestation for cross-border payments, 1099 reporting, and foreign tax authority requirements.
+  </Card>
+  <Card title="SOX Access Control" icon="shield-check">
+    Continuous evidence that privileged system access was authorized, intentional, and not shared across operators.
+  </Card>
+  <Card title="HIPAA Audit Trail" icon="user-shield">
+    PHI access logs with reality-anchored identity, satisfying 45 CFR 164.312(b) audit control requirements.
+  </Card>
+  <Card title="SOC 2 Type II Evidence" icon="clipboard-check">
+    Continuous control monitoring artifacts for CC6.1 (logical access) and CC7.2 (anomaly detection).
+  </Card>
+  <Card title="Board & Executive Report" icon="chart-line">
+    Monthly security posture summary with trust-score trends, anomaly incidents, and vector-level breakdowns.
+  </Card>
+</CardGroup>
+
+## What's in a Report
+
+Each attestation report contains:
+
+| Section | Contents |
+| --- | --- |
+| Report identity | Unique report ID, date range, operator account, cloud region, Sovereign tier |
+| Core KPIs | Handshake volume, average latency, compute usage, active node count |
+| Vector telemetry | Per-user trust-score breakdown across device, contact, and location vectors |
+| Anomaly log | All step-up triggers, failed handshakes, and session terminations with reason codes |
+| Mesh status | Health of integrated services (identity providers, telemetry pipeline, perimeter sensors) |
+| Audit events | Timestamped record of material actions keyed to responsible user |
+| Cryptographic seal | DSS hash, protocol node identifier, and manifest ID |
+
+See the [live report format](/dss/proof-of-work) for a complete example.
+
+## Pricing
+
+<CardGroup cols={3}>
+  <Card title="Per Filing" icon="file">
+    **$5,000** per report
+    Suitable for one-off SEC or tax filings
+  </Card>
+  <Card title="Quarterly Program" icon="calendar">
+    **$15,000** per quarter
+    Included in [Growth tier](/solutions/pricing) and above
+  </Card>
+  <Card title="Continuous" icon="infinity">
+    **Custom** annual
+    Real-time attestation API, included in Enterprise
+  </Card>
+</CardGroup>
+
+## Delivery Format
+
+Reports are delivered in three synchronized formats:
+
+<Steps>
+  <Step title="Signed PDF">
+    Human-readable report with the full seal, suitable for direct submission to regulators.
+  </Step>
+  <Step title="JSON manifest">
+    Machine-readable version with every handshake hash, trust score, and audit event for programmatic verification.
+  </Step>
+  <Step title="On-chain anchor">
+    Report root hash anchored to the discrete ledger. Any party can independently verify the report has not been altered after issuance.
+  </Step>
+</Steps>
+
+## Verification Chain
+
+Any recipient of a NEOXZ attestation report can independently verify its authenticity:
+
+<Steps>
+  <Step title="Extract the DSS hash">
+    Pull the report seal (e.g., `0xa7b9c24e88ff102b543789ccba01e4598d7612f043e871da6c2304918e951bfa`).
+  </Step>
+  <Step title="Query the discrete ledger">
+    Submit the hash to the public ledger endpoint. Receive the issuance timestamp and manifest ID.
+  </Step>
+  <Step title="Verify the manifest signature">
+    Confirm the manifest signature chains to the NEOXZ Engineering root key published in the trust bundle.
+  </Step>
+  <Step title="Reconstruct the Merkle root">
+    Hash the report payload. Confirm the computed root matches the on-chain anchor.
+  </Step>
+</Steps>
+
+## Target Buyers
+
+| Role | Why They Buy |
+| --- | --- |
+| Chief Compliance Officer | Replaces manual audit evidence collection with automated attestation |
+| General Counsel | Reduces litigation exposure through cryptographic identity proof |
+| CFO | Satisfies SEC and tax authority filing requirements with lower audit prep cost |
+| CISO | Provides SOC 2 and ISO 27001 control evidence without additional tooling |
+| Head of Internal Audit | Enables continuous controls monitoring in place of sample-based testing |
+
+## Get Started
+
+<CardGroup cols={2}>
+  <Card title="Request a Compliance Demo" icon="calendar" href="/solutions/request-a-demo">
+    30-minute walkthrough with a sample attestation report for your industry.
+  </Card>
+  <Card title="See a Live Report" icon="file-signature" href="/dss/proof-of-work">
+    Review the production telemetry report format in full.
+  </Card>
+</CardGroup>
+
+<Note>
+  Attestation reports require an active DSS deployment generating handshake data. Reports can be issued starting the first full calendar quarter after enrollment.
+</Note>
